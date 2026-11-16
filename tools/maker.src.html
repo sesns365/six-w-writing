@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>六何法分層寫作製作頁</title>
+<link href="https://fonts.googleapis.com/css2?family=Iansui&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#1f2937;--mut:#6b7280;--pri:#2563eb;--line:#e5e7eb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f172a;--card:#1e293b;--ink:#e5e7eb;--mut:#94a3b8;--line:#334155}}
+:root[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--ink:#e5e7eb;--mut:#94a3b8;--line:#334155}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iansui","芫荽","標楷體",sans-serif;line-height:1.6}
+header{padding:20px 16px 8px;max-width:1200px;margin:0 auto}
+h1{margin:0;font-size:1.6em}
+header p{margin:4px 0;color:var(--mut)}
+main{max-width:1200px;margin:0 auto;padding:8px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+textarea{width:100%;height:60vh;font-family:ui-monospace,Consolas,monospace;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);color:var(--ink)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+button,select{font:inherit;border:0;border-radius:10px;padding:8px 14px;background:#e0ecff;color:#1e3a8a;cursor:pointer}
+button.pri{background:var(--pri);color:#fff}
+#msg{min-height:1.5em;font-size:.92em}
+#msg.err{color:#dc2626}#msg.ok{color:#16a34a}
+iframe{width:100%;height:75vh;border:1px solid var(--line);border-radius:10px;background:#fff}
+ol{margin:6px 0;padding-left:1.3em;color:var(--mut);font-size:.92em}
+</style>
+</head>
+<body>
+<header>
+  <h1>✏️ 六何法分層寫作製作頁</h1>
+  <p>把 AI 給你的 lesson.json 貼到左邊，按「預覽」，再下載互動網頁或學習單。</p>
+  <ol><li>在 ChatGPT／Gemini／Claude 用六何法分層寫作小幫手產生 lesson.json。</li><li>全部複製貼到左邊（會先放範例〈小安學騎腳踏車〉）。</li><li>學習單、教師版按「列印／存 PDF」。</li></ol>
+</header>
+<main>
+  <section class="card">
+    <textarea id="src" spellcheck="false"></textarea>
+    <div id="msg"></div>
+  </section>
+  <section class="card">
+    <div class="btns">
+      <button class="pri" onclick="show('web')">預覽互動網頁</button>
+      <select id="ver"></select>
+      <button onclick="show('sheet')">預覽學習單</button>
+      <button onclick="show('teacher')">預覽教師版</button>
+    </div>
+    <div class="btns">
+      <button class="pri" onclick="dl()">⬇ 下載目前預覽的 HTML</button>
+      <button onclick="printIt()">🖨 列印／存 PDF</button>
+    </div>
+    <iframe id="pv" title="預覽"></iframe>
+  </section>
+</main>
+<script id="tpl" type="text/plain">/*__TEMPLATE__*/</script>
+<script id="ex" type="application/json">/*__EXAMPLE__*/</script>
+<script>
+const TPL = document.getElementById('tpl').textContent.replace(/<\\\/script>/g,'</'+'script>');
+const NAMES={web:'互動網頁',sheet:'學習單',teacher:'教師版'};
+let cur={mode:'web',html:'',L:null};
+const src=document.getElementById('src'), msg=document.getElementById('msg');
+src.value = JSON.stringify(JSON.parse(document.getElementById('ex').textContent), null, 2);
+src.addEventListener('input',()=>{ clearTimeout(src.t); src.t=setTimeout(()=>parse(true),400); });
+function parse(quiet){
+  let L; let t=src.value.trim().replace(/^```(json)?/,'').replace(/```$/,'');
+  try{ L=JSON.parse(t); }catch(e){ msg.className='err'; msg.textContent='JSON 格式有錯：'+e.message+'（請確認整段都有複製到）'; return null; }
+  const errs=[]; const lv=L.levels||{};
+  if(!L.title) errs.push('缺少 title');
+  if(!Object.keys(lv).length) errs.push('levels 是空的');
+  const keys=new Set(); Object.values(lv).forEach(x=>(x.fields||[]).forEach(f=>keys.add(f.key)));
+  Object.entries(lv).forEach(([n,x])=>((x.frame||'').match(/\{(\w+)\}/g)||[]).forEach(k=>{ if(!keys.has(k.slice(1,-1))) errs.push(`第 ${n} 層句型用到 ${k}，但沒有這個欄位`); }));
+  if(!L.versions||!L.versions.length) L.versions=[{name:'通用版',levels:Object.keys(lv).map(Number),support:'中'}];
+  L.versions.forEach(v=>(v.levels||[]).forEach(n=>{ if(!lv[n]) errs.push(`版本「${v.name}」用到第 ${n} 層，但 levels 沒有`); }));
+  if(errs.length){ msg.className='err'; msg.textContent=errs.join('；'); return null; }
+  const sel=document.getElementById('ver'); const old=sel.value;
+  sel.innerHTML=L.versions.map((v,i)=>`<option value="${i}">${v.name}</option>`).join(''); if(old && L.versions[old]) sel.value=old;
+  msg.className='ok'; msg.textContent=`讀取成功：${L.title}，${Object.keys(lv).length} 層，${L.versions.length} 個版本。`;
+  return L;
+}
+function build(L, mode, ver){
+  const js = JSON.stringify(Object.assign({}, L, {__mode:mode, __version:ver||0})).replace(/<\//g,'<\\/');
+  return TPL.replace('/*__LESSON__*/', ()=>js);
+}
+function show(mode){
+  const L=parse(); if(!L) return;
+  const ver=+document.getElementById('ver').value||0;
+  cur={mode, ver, L, html:build(L,mode,ver)};
+  document.getElementById('pv').srcdoc=cur.html;
+}
+function fname(){ const v=cur.L.versions[cur.ver]; return `${cur.L.title}_${NAMES[cur.mode]}${cur.mode==='sheet'?'_'+v.name:''}.html`.replace(/[\\/:*?"<>|\s]+/g,'_'); }
+function dl(){ if(!cur.html) show(cur.mode); if(!cur.html) return; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([cur.html],{type:'text/html'})); a.download=fname(); a.click(); }
+function printIt(){ if(!cur.html) show('sheet'); const f=document.getElementById('pv'); setTimeout(()=>f.contentWindow.print(),300); }
+show('web');
+</script>
+</body>
+</html>
