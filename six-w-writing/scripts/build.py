@@ -6,6 +6,7 @@
     python build.py lesson.json -o 輸出資料夾
     python build.py lesson.json --no-pdf --no-docx
     python build.py lesson.json --check         # 只檢查 JSON，不產生檔案
+    python build.py lesson.json --font kai      # 字型：iansui 芫荽（預設）／kai 標楷／bpmf 芫荽注音
 
 產出：
     <題目>_互動網頁.html          學生一層一層寫（含全部版本，開啟時選版本）
@@ -123,6 +124,40 @@ def make_html(L, mode, ver=0):
     return TEMPLATE.read_text(encoding="utf-8").replace("/*__LESSON__*/", js)
 
 
+# ---------------------------------------------------------------- 字型（PDF 用）
+FONT_CSS = {"iansui": ("Iansui", "Iansui"), "bpmf": ("Bpmf Iansui", "Bpmf+Iansui")}
+
+
+def font_file(key):
+    """下載 Google Fonts 的 TTF 到快取資料夾，讓 PDF 一定用芫荽／芫荽注音（不會變成黑體）。失敗回傳 None。"""
+    import urllib.request
+    fam, q = FONT_CSS[key]
+    cache = Path.home() / ".cache" / "six-w-writing"
+    cache.mkdir(parents=True, exist_ok=True)
+    out = cache / (fam.replace(" ", "") + ".ttf")
+    if out.exists() and out.stat().st_size > 100000:
+        return out
+    try:
+        css = urllib.request.urlopen(f"https://fonts.googleapis.com/css2?family={q}", timeout=30).read().decode()
+        url = re.search(r"url\((https://[^)]+\.ttf)\)", css).group(1)
+        out.write_bytes(urllib.request.urlopen(url, timeout=120).read())
+        return out
+    except Exception as e:  # 沒網路時就用電腦上已安裝的字型
+        print(f"提醒：下載 {fam} 字型失敗（{e}），PDF 改用電腦已安裝的字型。")
+        return None
+
+
+def pdf_html(html_text, font):
+    """列印用 HTML：把字型檔直接指到本機快取，避免無頭瀏覽器連不到 Google Fonts。"""
+    keys = ["iansui"] + (["bpmf"] if font == "bpmf" else [])
+    css = ""
+    for k in keys:
+        f = font_file(k)
+        if f:
+            css += f"@font-face{{font-family:'{FONT_CSS[k][0]}';src:url('{f.resolve().as_uri()}') format('truetype');}}"
+    return html_text.replace("</head>", f"<style>{css}</style></head>", 1) if css else html_text
+
+
 # ---------------------------------------------------------------- PDF
 def to_pdf(html: Path, out: Path) -> bool:
     try:
@@ -177,7 +212,8 @@ def pdf_by_browser(html: Path, out: Path) -> bool:
 def to_docx(L, out: Path, font="標楷體") -> bool:
     try:
         from docx import Document
-        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from docx.enum.table import WD_ROW_HEIGHT_RULE, WD_TABLE_ALIGNMENT
+        from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
         from docx.oxml import OxmlElement
         from docx.oxml.ns import qn
         from docx.shared import Mm, Pt, RGBColor
@@ -228,12 +264,40 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
         tcPr.append(sh)
 
     def lines(target, n, val=None):
-        if val:
-            for t in str(val).split("\n"):
-                para(target, t, color=RED)
-            return
-        for _ in range(n):
-            para(target, "＿" * 24)
+        """書寫線：段落下框線，固定 10mm 行高。教師版把答案寫在線上（紅字）。"""
+        rows = str(val).split("\n") if val else [""] * n
+        for t in rows:
+            p = target.add_paragraph()
+            if t:
+                run(p, t, color=RED)
+            pPr = p._p.get_or_add_pPr()
+            bd = OxmlElement("w:pBdr")
+            for side in ("bottom", "between"):  # between：連續書寫線之間也要畫線
+                b = OxmlElement("w:" + side)
+                for k, v in (("val", "single"), ("sz", "8"), ("space", "1"), ("color", "94A3B8")):
+                    b.set(qn("w:" + k), v)
+                bd.append(b)
+            pPr.insert(0, bd)
+            pf = p.paragraph_format
+            pf.line_spacing_rule = WD_LINE_SPACING.EXACTLY
+            pf.line_spacing = Mm(10)
+            pf.space_after = Pt(0)
+            pf.space_before = Pt(0)
+        sp = target.add_paragraph()  # 間隔，避免最後一條線和表格框線重疊
+        sp.paragraph_format.space_after = Pt(0)
+        sp.paragraph_format.line_spacing = Pt(6)
+
+    def grid_paper(target, rows, cols=17):
+        g = target.add_table(rows=rows, cols=cols)
+        g.style = "Table Grid"
+        g.alignment = WD_TABLE_ALIGNMENT.CENTER
+        for r in g.rows:
+            r.height = Mm(9.5)
+            r.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
+            for c in r.cells:
+                c.width = Mm(9.5)
+        for gc in g._tbl.tblGrid.findall(qn("w:gridCol")):
+            gc.set(qn("w:w"), str(int(Mm(9.5).twips)))
 
     fields = {}
     for lv in L["levels"].values():
@@ -271,105 +335,146 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
             a.append(a.pop(0))
         return [x[1] for x in a]
 
+    def blank(p, width=8, text=""):
+        if text:
+            run(p, f" {text} ", u=True, color=RED)
+        else:
+            run(p, "＿" * width)
+
     def level(n, lv, sup, ans):
-        t = doc.add_table(rows=1, cols=2)
+        t = doc.add_table(rows=2, cols=1)
         t.style = "Table Grid"
-        t.autofit = False
-        lc, rc = t.rows[0].cells
-        lc.width, rc.width = Mm(26), Mm(158)
-        t.columns[0].width, t.columns[1].width = Mm(26), Mm(158)
-        for i, w in enumerate((Mm(26), Mm(158))):
-            t._tbl.tblGrid.findall(qn('w:gridCol'))[i].set(qn('w:w'), str(int(w.twips)))
-        shade(lc, COL.get(n, "F1F5F9"))
-        lc.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run(lc.paragraphs[0], f"{n}\n{lv.get('name') or LV_NAME[n]}", bold=True)
-        para(lc, LV_SUB[n], size=9, align="c")
-        rc.paragraphs[0].text = ""
-        if lv.get("guide"):
-            run(rc.paragraphs[0], lv["guide"])
+        hc, cc = t.rows[0].cells[0], t.rows[1].cells[0]
+        shade(hc, COL.get(n, "F1F5F9"))
+        hp = hc.paragraphs[0]
+        run(hp, f"{n}  {lv.get('name') or LV_NAME[n]}", bold=True, size=13)
         tp = ltype(n, lv)
+        if lv.get("guide") and tp != "essay":
+            run(hp, "　" + lv["guide"], size=11.5)
+        cp = cc.paragraphs[0]
+        first = [True]
+
+        def cpara(text="", **kw):
+            if first[0]:
+                first[0] = False
+                if text:
+                    run(cp, text, **{k: v for k, v in kw.items() if k in ("bold", "color", "size")})
+                return cp
+            return para(cc, text, **kw)
+
         if tp in ("fields", "transfer"):
             if lv.get("prompt"):
-                para(rc, lv["prompt"], bold=True)
+                cpara(lv["prompt"], bold=True)
             for f in lv.get("fields", []):
-                p = rc.add_paragraph()
+                p = cpara()
+                p.paragraph_format.space_before = Pt(4)
                 run(p, f["label"] + "：", bold=True)
                 if "choices" in sup and f.get("choices"):
                     for c in f["choices"]:
                         ok = ans and c == disp(f)
-                        run(p, ("☑" if ok else "☐") + c + "　", color=RED if ok else None)
-                elif ans and f.get("ans"):
-                    run(p, disp(f), color=RED, u=True)
+                        run(p, ("◉ " if ok else "○ ") + c + "　　", color=RED if ok else None)
                 else:
-                    run(p, "＿" * 12)
-                if "bank" in sup and f.get("bank"):
-                    para(rc, f"{f.get('bankName') or f['label'] + '提示詞'}：" + "、".join(f["bank"]), size=10.5)
-            if "bank" in sup and lv.get("bank"):
-                para(rc, f"{lv.get('bankName') or '提示詞'}：" + "、".join(lv["bank"]), size=10.5)
+                    blank(p, 14, disp(f) if ans else "")
+            if "bank" in sup:
+                for f in lv.get("fields", []):
+                    if f.get("bank"):
+                        cpara(f"【{f.get('bankName') or f['label'] + '提示詞'}】" + "　".join(f["bank"]), size=11)
+                if lv.get("bank"):
+                    cpara(f"【{lv.get('bankName') or '提示詞'}】" + "　".join(lv["bank"]), size=11)
             if "frame" in sup and lv.get("frame"):
-                para(rc, "句型：" + frame_text(lv["frame"], ans), size=11)
+                cpara("【句型】" + frame_text(lv["frame"], ans), size=12)
             if lv.get("sentence", True):
-                para(rc, lv.get("sentenceLabel") or "寫成完整的句子：")
-                lines(rc, lv.get("lines", 2), lv.get("model") if ans else None)
+                cpara("✎ " + (lv.get("sentenceLabel") or "寫成完整的句子"))
+                lines(cc, lv.get("lines", 2), lv.get("model") if ans else None)
             if tp == "transfer":
-                para(rc, "我會檢查：" + "　".join("☐" + c for c in (lv.get("checks") or [x[0] for x in CHECK4])))
+                cpara("我會檢查：" + "　".join("☐ " + c for c in (lv.get("checks") or [x[0] for x in CHECK4])))
         elif tp == "sort":
             ev = lv.get("events", [])
             if "cards" in sup:
                 sh = shuffled(ev)
-                para(rc, "事件卡：" + "　".join(f"{'ABCDEFGH'[i]} {e}" for i, e in enumerate(sh)), size=10.5)
-                if ans:
-                    para(rc, " → ".join(f"{'ABCDEFGH'[sh.index(e)]} {e}" for e in ev), color=RED)
-                else:
-                    para(rc, " → ".join("（　）" for _ in ev))
+                cpara("　".join(f"〔{'ABCDEFGH'[i]}〕{e}" for i, e in enumerate(sh)), size=12)
+                p = cpara()
+                for i, e in enumerate(ev):
+                    blank(p, 3, "ABCDEFGH"[sh.index(e)] if ans else "")
+                    if i < len(ev) - 1:
+                        run(p, " ➜ ")
             else:
-                para(rc, " → ".join(ev) if ans else " → ".join("＿＿＿＿" for _ in ev), color=RED if ans else None)
+                p = cpara()
+                for i, e in enumerate(ev):
+                    blank(p, 6, e if ans else "")
+                    if i < len(ev) - 1:
+                        run(p, " ➜ ")
             if "bank" in sup and lv.get("connectors"):
-                para(rc, "連接詞：" + "、".join(lv["connectors"]), size=10.5)
+                cpara("【連接詞】" + "　".join(lv["connectors"]), size=11)
             if "frame" in sup and lv.get("frame"):
-                para(rc, "句型：" + lv["frame"], size=11)
-            para(rc, lv.get("sentenceLabel") or "用連接詞把事件串成一段話：")
-            lines(rc, lv.get("lines", 3), lv.get("model") if ans else None)
+                cpara("【句型】" + lv["frame"], size=12)
+            cpara("✎ " + (lv.get("sentenceLabel") or "用連接詞串成一段話"))
+            lines(cc, lv.get("lines", 3), lv.get("model") if ans else None)
         elif tp == "parts":
             for p_ in lv.get("parts", []):
-                p = rc.add_paragraph()
-                run(p, p_["label"], bold=True)
-                run(p, f"（{p_.get('hint', '')}）", size=10)
-                if "frame" in sup and p_.get("starter"):
-                    para(rc, p_["starter"] + "……", size=11)
-                lines(rc, p_.get("lines", 2), p_.get("model") if ans else None)
+                cpara(p_["label"], bold=True)
+                if "frame" in sup and p_.get("starter") and not ans:
+                    lines(cc, 1, None)
+                    cc.paragraphs[-1].add_run(p_["starter"]).font.color.rgb = RGBColor(0x43, 0x38, 0xCA)
+                    lines(cc, max(1, p_.get("lines", 2) - 1))
+                else:
+                    lines(cc, p_.get("lines", 2), p_.get("model") if ans else None)
             if "bank" in sup and lv.get("bank"):
-                para(rc, f"{lv.get('bankName') or '提示詞'}：" + "、".join(lv["bank"]), size=10.5)
+                cpara(f"【{lv.get('bankName') or '提示詞'}】" + "　".join(lv["bank"]), size=11)
         elif tp == "essay":
             if lv.get("prompt"):
-                para(rc, f"題目：{lv['prompt']}" + (f"（約 {lv['words']} 字）" if lv.get("words") else ""), bold=True)
+                cpara(f"題目：{lv['prompt']}" + (f"（約 {lv['words']} 字）" if lv.get("words") else ""), bold=True)
             if "frame" in sup and lv.get("starter"):
-                para(rc, "開頭可以這樣寫：" + lv["starter"] + "……", size=11)
+                cpara("【開頭】" + lv["starter"] + "……", size=12)
             if "bank" in sup and lv.get("bank"):
-                para(rc, f"{lv.get('bankName') or '好用詞語'}：" + "、".join(lv["bank"]), size=10.5)
-            lines(rc, lv.get("lines", 9), lv.get("model") if ans else None)
+                cpara(f"【{lv.get('bankName') or '好用詞語'}】" + "　".join(lv["bank"]), size=11)
+            if ans:
+                lines(cc, 0, lv.get("model"))
+            else:
+                nums = re.findall(r"\d+", str(lv.get("words", "")))
+                rows = lv.get("rows") or (-(-int(int(nums[-1]) * 1.1) // 17) + 1 if nums else lv.get("lines", 10))
+                grid_paper(cc, rows)
         if "model" in sup and lv.get("model") and not ans and tp not in ("essay", "parts"):
-            para(rc, "範例：" + lv["model"], size=10, color=RGBColor(0x16, 0x65, 0x34))
-        para(doc, "", size=4)
+            cpara("範例：" + lv["model"], size=10.5, color=RGBColor(0x16, 0x65, 0x34))
+        para(doc, "", size=6)
 
     def sheet(v, ans):
         sup = sup_list(v)
-        para(doc, "班級：＿＿＿＿　座號：＿＿＿　姓名：＿＿＿＿＿＿　日期：＿＿月＿＿日", size=11)
-        para(doc, f"六何寫作學習單（{v['name']}{'・教師版' if ans else ''}）", size=18, bold=True, align="c")
-        para(doc, f"想一想、排一排、說一說，一塊一塊寫出來｜{'題目' if L.get('mode') == 'topic' else '素材'}：{L['title']}", size=11, align="c")
-        if L.get("goals"):
-            para(doc, "學習目標：" + "　".join(f"{i + 1}. {g}" for i, g in enumerate(L["goals"])), size=11)
-        if L.get("core"):
-            para(doc, ("寫作重點：" if L.get("mode") == "topic" else "素材核心：") + L["core"], size=11)
+        topic = L.get("mode") == "topic"
+        h = doc.add_table(rows=1, cols=2)
+        h.style = "Table Grid"
+        a, b = h.rows[0].cells
+        shade(a, "334155")
+        h.autofit = False
+        a.width, b.width = Mm(28), Mm(156)
+        for i, w in enumerate((Mm(28), Mm(156))):
+            h.columns[i].width = w
+            h._tbl.tblGrid.findall(qn("w:gridCol"))[i].set(qn("w:w"), str(int(w.twips)))
+        a.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        r = run(a.paragraphs[0], "六何法\n寫作", bold=True, size=14)
+        r.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+        run(b.paragraphs[0], L["title"], bold=True, size=20)
+        run(b.paragraphs[0], f"　（{v['name']}{'・教師版' if ans else ''}）", size=11)
+        para(doc, "班級：＿＿＿＿　座號：＿＿＿　姓名：＿＿＿＿＿＿＿　日期：＿＿月＿＿日", size=12)
+        if ans:
+            if L.get("core"):
+                para(doc, ("寫作重點：" if topic else "素材核心：") + L["core"], size=10.5)
+            if L.get("goals"):
+                para(doc, "學習目標：" + "　".join(f"{i + 1}. {g}" for i, g in enumerate(L["goals"])), size=10.5)
         m = L.get("material") or {}
         if m.get("text") and v.get("showMaterial", True):
-            para(doc, ("寫作素材：" if L.get("mode") == "topic" else "閱讀素材：") + (m.get("name") or L["title"]), bold=True, size=11)
-            for t in m["text"]:
-                p = para(doc, t, size=11)
-                p.paragraph_format.first_line_indent = Pt(22)
+            mt = doc.add_table(rows=1, cols=1)
+            mt.style = "Table Grid"
+            mc = mt.rows[0].cells[0]
+            run(mc.paragraphs[0], ("寫作素材：" if topic else "讀一讀：") + (m.get("name") or L["title"]), bold=True)
+            for tx in m["text"]:
+                p = para(mc, tx)
+                p.paragraph_format.first_line_indent = Pt(24)
+                p.paragraph_format.line_spacing = 1.4
+            para(doc, "", size=6)
         for n in v["levels"]:
             level(int(n), L["levels"][str(n)], sup, ans)
-        para(doc, "學習檢核：" + "　".join("☐" + x[0] for x in CHECK4), size=11)
+        para(doc, "我完成了：" + "　".join("☐ " + x[0] for x in CHECK4), size=12)
 
     vs = L["versions"]
     for i, v in enumerate(vs):
@@ -418,7 +523,9 @@ def main():
     ap.add_argument("--no-pdf", action="store_true")
     ap.add_argument("--no-docx", action="store_true")
     ap.add_argument("--check", action="store_true", help="只檢查 JSON")
-    ap.add_argument("--word-font", default="標楷體")
+    ap.add_argument("--font", choices=["iansui", "kai", "bpmf"],
+                    help="字型：iansui 芫荽（預設）、kai 標楷（教育部標準楷書優先）、bpmf 芫荽注音")
+    ap.add_argument("--word-font", help="Word 字型名稱（預設標楷體，每台 Windows 都有；注音版用 Bpmf Iansui；要芫荽請填 Iansui，電腦需已安裝）")
     a = ap.parse_args()
     src = Path(a.lesson)
     L = json.loads(src.read_text(encoding="utf-8"))
@@ -430,6 +537,9 @@ def main():
             print("錯誤：" + e)
         sys.exit(1)
     print("JSON 檢查通過。")
+    if a.font:
+        L["font"] = a.font
+    word_font = a.word_font or ("Bpmf Iansui" if L.get("font") == "bpmf" else "標楷體")
     if a.check:
         return
     out = Path(a.out) if a.out else src.parent
@@ -449,10 +559,13 @@ def main():
     print(f"教師版：{th}")
     pages.append(th)
     if not a.no_pdf:
+        tmp = out / ".print.html"
         for h in pages:
-            to_pdf(h, h.with_suffix(".pdf"))
+            tmp.write_text(pdf_html(h.read_text(encoding="utf-8"), L.get("font")), encoding="utf-8")
+            to_pdf(tmp, h.with_suffix(".pdf"))
+        tmp.unlink(missing_ok=True)
     if not a.no_docx:
-        to_docx(L, out / f"{name}_學習單.docx", a.word_font)
+        to_docx(L, out / f"{name}_學習單.docx", word_font)
 
 
 if __name__ == "__main__":

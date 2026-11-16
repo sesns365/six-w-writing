@@ -69,7 +69,8 @@ ol{margin:6px 0;padding-left:1.3em;color:var(--mut);font-size:.92em}
 -->
 <style>
 :root{
-  --font:"Iansui","芫荽","標楷體","DFKai-SB","BiauKai","TW-Kai",serif;
+  --kai:"教育部標準楷書","TW-MOE-Std-Kai","標楷體","DFKai-SB","BiauKai","TW-Kai";
+  --font:"Iansui","芫荽",var(--kai),serif;  /* 預設芫荽；不用黑體（筆順不符台灣標準字體） */
   --ink:#1f2937; --muted:#6b7280; --line:#cbd5e1; --bg:#f4f7fb; --paper:#fff;
   --c1:#3b82f6; --c2:#10b981; --c3:#8b5cf6; --c4:#ec4899; --c5:#f59e0b; --c6:#14b8a6; --c7:#6366f1; --c8:#0ea5e9;
   --t1:#eff6ff; --t2:#ecfdf5; --t3:#f5f3ff; --t4:#fdf2f8; --t5:#fffbeb; --t6:#f0fdfa; --t7:#eef2ff; --t8:#f0f9ff;
@@ -78,7 +79,8 @@ ol{margin:6px 0;padding-left:1.3em;color:var(--mut);font-size:.92em}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{font-family:var(--font);color:var(--ink);background:var(--bg);font-size:calc(18px * var(--fs));line-height:1.6}
-body.kai{--font:"標楷體","DFKai-SB","BiauKai","TW-Kai",serif}
+body.kai{--font:var(--kai),serif}
+body.bpmf{--font:"Bpmf Iansui","芫荽注音","Iansui","芫荽",var(--kai),serif;line-height:2}
 button{font:inherit;cursor:pointer}
 input,textarea,select{font:inherit;color:inherit}
 .hide{display:none !important}
@@ -181,64 +183,83 @@ details.model summary{cursor:pointer;font-weight:700;color:#166534}
 .pick{max-width:640px;margin:40px auto;text-align:center}
 .pick .big{display:block;width:100%;margin:10px 0}
 
-/* ================= 學習單（列印） ================= */
-body.paper{background:#e5e7eb;font-size:12pt;line-height:1.55}
+/* ================= 學習單（列印） =================
+   學生版：只留題目與作答空間，不放教學說明；書寫線 10mm、完整寫作用方格稿紙。 */
+body.paper{background:#e5e7eb;font-size:13pt;line-height:1.6}
 .sheetwrap{width:210mm;margin:0 auto}
-.pg{background:#fff;width:210mm;min-height:297mm;padding:12mm 13mm;margin:10px auto;box-shadow:0 2px 10px rgba(0,0,0,.12)}
-.ph{display:flex;justify-content:space-between;gap:8px;font-size:11pt;border-bottom:1px solid #94a3b8;padding-bottom:4px}
-.pt{font-size:18pt;font-weight:700;text-align:center;margin:6px 0 0}
-.pt .ver{font-size:10pt;font-weight:400;border:1px solid #64748b;border-radius:6px;padding:0 6px;margin-left:8px;vertical-align:middle}
-.ps{text-align:center;font-size:11pt;color:#475569;margin-bottom:6px}
-.pgoal,.pcore,.pchoose{font-size:10.5pt;border-radius:6px;padding:4px 10px;margin:4px 0}
-.pgoal{background:#f1f5f9}
-.pcore{background:#fdf2f8;border:1px solid #f9a8d4}
-.pchoose{background:#fffbeb;border:1px solid #fcd34d}
-.pmat{border:1.5px solid #94a3b8;border-radius:8px;padding:6px 12px;margin:6px 0;font-size:11pt}
-.pmat .mh{font-weight:700;font-size:11pt}
-.pmat p{margin:.15em 0;text-indent:2em}
-.plv{display:grid;grid-template-columns:27mm 1fr;border:1.5px solid var(--lc);border-radius:8px;margin:7px 0;break-inside:avoid;page-break-inside:avoid;overflow:hidden}
-.plv .pl{background:var(--lt);border-right:1.5px solid var(--lc);padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.plv .pl .n{width:24px;height:24px;border-radius:50%;background:var(--lc);color:#fff;display:grid;place-items:center;font-weight:700;font-size:11pt}
-.plv .pl b{font-size:12pt;margin-top:2px}
-.plv .pl small{font-size:8.5pt;color:#475569;line-height:1.3}
-.plv .pc{padding:6px 10px;font-size:11.5pt}
-.pq{margin:2px 0}
-.pf{display:flex;flex-wrap:wrap;gap:4px 18px}
-.pf .it{white-space:nowrap}
-.bl{display:inline-block;min-width:6em;border-bottom:1px solid #334155;text-align:center;padding:0 4px;line-height:1.3}
-.bl small{color:#94a3b8;font-size:7.5pt}
-.ans .bl,.ans .wl.fillv,.ans .tv{color:var(--red)}
-.op{display:inline-flex;flex-wrap:wrap;gap:2px 12px}
-.op span::before{content:"☐ ";}
-.op span.ok::before{content:"☑ ";color:var(--red)}
-.pbank{background:#fff7ed;border:1px dashed #fdba74;border-radius:6px;padding:2px 8px;margin:4px 0;font-size:10.5pt}
-.pframe{background:#eef2ff;border:1px dashed #a5b4fc;border-radius:6px;padding:4px 8px;margin:4px 0;line-height:2}
-.wl{border-bottom:1px solid #94a3b8;height:2.05em;line-height:2.05em;font-size:11pt}
-.wl.grid{background-image:linear-gradient(to right,#e2e8f0 1px,transparent 1px);background-size:1.5em 100%}
-.psort{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
-.psort .sb{border:1.5px solid #f9a8d4;border-radius:6px;min-width:22mm;min-height:9mm;display:inline-flex;align-items:center;justify-content:center;padding:1px 6px;font-size:10.5pt}
-.pcards{font-size:10pt;margin:3px 0}
-.pcards span{border:1px solid #f9a8d4;border-radius:5px;padding:0 5px;margin:0 3px 3px 0;display:inline-block}
-.pparts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.pparts>div{border:1px solid #cbd5e1;border-radius:6px;padding:4px 6px;font-size:10.5pt}
-.pparts b{display:block}
-.pparts small{color:#64748b}
-.pck{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:10.5pt;margin-top:4px}
-.pck span::before{content:"☐ "}
-.pfoot{display:flex;gap:10px;flex-wrap:wrap;font-size:10.5pt;border-top:1px solid #94a3b8;padding-top:6px;margin-top:8px}
-.pfoot span::before{content:"☐ "}
-.pfoot b::after{content:"："}
-.tsec h3{font-size:13pt;margin:10px 0 4px;border-left:5px solid #2563eb;padding-left:8px}
+.pg{background:#fff;width:210mm;min-height:297mm;padding:11mm 12mm;margin:10px auto;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.phead{display:flex;align-items:stretch;gap:0;border:2px solid #334155;border-radius:12px;overflow:hidden}
+.phead .pb{background:#334155;color:#fff;padding:4px 12px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:11pt;line-height:1.25;text-align:center;min-width:24mm}
+.phead .pb b{font-size:15pt;letter-spacing:2px}
+.phead .ptt{flex:1;padding:4px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.phead .ptt h1{margin:0;font-size:20pt;font-weight:700;line-height:1.3}
+.phead .ptt .ver{font-size:10.5pt;border:1.5px solid #334155;border-radius:999px;padding:0 10px;white-space:nowrap}
+.pname{display:flex;gap:6mm;margin:3mm 1mm 2mm;font-size:12pt;align-items:flex-end}
+.pname span{display:flex;align-items:flex-end;gap:2px;white-space:nowrap}
+.pname i{display:inline-block;border-bottom:1.5px solid #334155;width:14mm;height:7mm}
+.pname i.w{width:34mm}.pname i.s{width:9mm}
+.pteach{font-size:10.5pt;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:3px 10px;margin:2mm 0}
+.pmat{border:1.5px solid #94a3b8;border-radius:10px;padding:2mm 4mm;margin:2mm 0 3mm;font-size:12pt;line-height:1.75;break-inside:avoid}
+.pmat .mh{font-weight:700;font-size:12pt;margin-bottom:1mm}
+.pmat p{margin:0;text-indent:2em}
+.pmat img{display:block;margin:1mm auto;max-height:55mm;max-width:100%}
+.plv{border:2px solid var(--lc);border-radius:12px;margin:0 0 4mm;break-inside:avoid;page-break-inside:avoid;overflow:hidden}
+.plh{display:flex;align-items:center;gap:3mm;background:var(--lt);border-bottom:1.5px solid var(--lc);padding:1.5mm 4mm}
+.plh .n{flex:none;width:8mm;height:8mm;border-radius:50%;background:var(--lc);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12pt}
+.plh b{flex:none;font-size:14pt;color:#1f2937}
+.plh .q{font-size:12pt;color:#334155}
+.pc{padding:2.5mm 4mm 3mm}
+.pf{display:flex;flex-wrap:wrap;gap:1mm 7mm;align-items:flex-end}
+.pf .it{display:flex;align-items:flex-end;gap:2mm;min-height:10mm;flex:1 1 52mm}
+.pf .it.wide{flex-basis:100%}
+.pf .it>b{white-space:nowrap;font-size:12.5pt}
+.bl{display:inline-block;flex:1;min-width:24mm;border-bottom:1.5px solid #475569;min-height:9mm;line-height:9mm;text-align:center;padding:0 2mm}
+.bl.in{flex:none;min-width:22mm;min-height:8mm;line-height:8mm;margin:0 1.5mm}
+.bl small{color:#94a3b8;font-size:8.5pt}
+.op{display:flex;flex-wrap:wrap;gap:2mm 3mm}
+.op span{border:1.5px solid #94a3b8;border-radius:999px;padding:0 4mm;line-height:8mm;font-size:12pt}
+.op span.ok{border-color:var(--red);color:var(--red);box-shadow:0 0 0 1.5px var(--red)}
+.pbank{display:flex;flex-wrap:wrap;gap:1.5mm 2mm;align-items:center;margin:2mm 0 0;font-size:11pt}
+.pbank b{font-size:10.5pt;color:#9a3412;background:#ffedd5;border-radius:5px;padding:0 2mm}
+.pbank span{border:1px dashed #fdba74;border-radius:6px;padding:0 2mm;background:#fffaf5}
+.pframe{background:#f5f7ff;border:1.5px dashed #a5b4fc;border-radius:8px;padding:1mm 3mm;margin:2.5mm 0 0;line-height:11mm;font-size:12.5pt}
+.pframe>b{font-size:10.5pt;color:#4338ca;background:#e0e7ff;border-radius:5px;padding:0 2mm;margin-right:2mm}
+.wlab{margin-top:2.5mm;font-size:12pt;color:#334155}
+.wl{border-bottom:1.5px solid #94a3b8;height:10mm}
+.wl.ansl{height:auto;min-height:10mm;line-height:10mm;color:var(--red);border-bottom:1.5px solid #94a3b8;white-space:pre-wrap;font-size:12pt}
+.gridp{display:grid;grid-template-columns:repeat(var(--gc,17),10mm);justify-content:center;margin:2mm 0 0;border-top:1.5px solid #cbd5e1;border-left:1.5px solid #cbd5e1}
+.gridp i{width:10mm;height:10mm;border-right:1.5px solid #cbd5e1;border-bottom:1.5px solid #cbd5e1}
+.gridp i:nth-child(5n){border-right-color:#cbd5e1}
+.pmodel{margin-top:2mm;font-size:10.5pt;color:#166534;background:#f0fdf4;border-radius:6px;padding:0 3mm}
+.pcards{display:flex;flex-wrap:wrap;gap:2mm;margin:1mm 0 2mm}
+.pcards span{border:1.5px solid #f9a8d4;background:#fff7fb;border-radius:8px;padding:0 3mm;line-height:9mm;font-size:12pt}
+.pcards span em{font-style:normal;font-weight:700;color:#be185d;margin-right:1.5mm}
+.psort{display:flex;flex-wrap:wrap;align-items:center;gap:2mm}
+.psort .sb{position:relative;border:1.5px solid #ec4899;border-radius:8px;min-width:24mm;height:12mm;display:inline-flex;align-items:center;justify-content:center;padding:0 2mm;font-size:12pt;color:var(--red)}
+.psort .sb.wide{min-width:52mm}
+.psort .sb sup{position:absolute;top:-2.2mm;left:-2.2mm;width:5mm;height:5mm;border-radius:50%;background:#ec4899;color:#fff;font-size:8pt;line-height:5mm;text-align:center}
+.psort .ar{color:#94a3b8}
+.ppart{display:grid;grid-template-columns:17mm 1fr;gap:3mm;margin-top:2mm}
+.ppart .pl{border-radius:8px;background:var(--lt);border:1.5px solid var(--lc);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:13pt}
+.ppart .st{color:#4338ca;font-size:12pt;line-height:10mm;border-bottom:1.5px solid #94a3b8}
+.pck{display:flex;flex-wrap:wrap;gap:2mm 6mm;font-size:12pt;margin-top:3mm;align-items:center}
+.pck span::before,.pfoot span::before{content:"☐";font-size:14pt;margin-right:1mm}
+.pfoot{display:flex;gap:6mm;flex-wrap:wrap;align-items:center;font-size:12pt;border-top:1.5px dashed #94a3b8;padding-top:2mm;margin-top:2mm;break-inside:avoid}
+.ans .bl,.ans .tv{color:var(--red)}
+.tsec{font-size:11pt}
+.tsec h2{margin:0 0 2mm;font-size:18pt;text-align:center}
+.tsec h3{font-size:13pt;margin:4mm 0 1.5mm;border-left:5px solid #334155;padding-left:8px}
 .tsec table{border-collapse:collapse;width:100%;font-size:10.5pt}
 .tsec th,.tsec td{border:1px solid #94a3b8;padding:4px 6px;text-align:left;vertical-align:top}
 .tsec th{background:#f1f5f9;white-space:nowrap}
 .tsec ul{margin:2px 0;padding-left:1.3em;font-size:10.5pt}
 .tv{white-space:pre-wrap}
+body.bpmf .pmat,body.bpmf .pc,body.bpmf .plh .q{line-height:2.1}
 @page{size:A4;margin:11mm 12mm}
 @media print{
   body,body.paper{background:#fff}
-  .pg{margin:0;padding:0;width:auto;box-shadow:none;page-break-after:always;min-height:auto}
   .sheetwrap{width:auto}
+  .pg{margin:0;padding:0;width:auto;box-shadow:none;page-break-after:always;min-height:auto}
   .pg:last-child{page-break-after:auto}
   .bar,.menu,.toast,#rec{display:none !important}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -291,75 +312,6 @@ function tint(n){ return `var(--t${n})`; }
    學習單（sheet／teacher）
    ===================================================================== */
 function disp(f){ if(!f) return ''; if(f.show) return f.show; const a=f.ans||[]; const c=(f.choices||[]).find(x=>a.some(k=>k&&x.includes(k))); return c||a[0]||''; }
-function fillFrame(fr, ans){ // 句型 → 空格
-  return esc(fr).replace(/\{(\w+)\}/g,(m,k)=>{
-    const f=FIELDS[k]; const lab=f?f.label.replace(/[（(].*$/,''):k;
-    const v = ans && disp(f);
-    return v ? `<span class="bl">${esc(v)}</span>` : `<span class="bl"><small>${esc(lab)}</small></span>`;
-  });
-}
-function lines(n, val, grid){
-  let h='';
-  if(val){ h += `<div class="wl fillv tv" style="height:auto;line-height:2.05em">${esc(val)}</div>`; n=Math.max(0,n-Math.ceil(String(val).length/34)); }
-  for(let i=0;i<n;i++) h+=`<div class="wl${grid?' grid':''}"></div>`;
-  return h;
-}
-function sheetLevel(n, lv, sup, ans){
-  const has = k=>sup.includes(k);
-  let c = '';
-  if(lv.guide) c += `<div class="pq">${esc(lv.guide)}</div>`;
-  const type = lv.type || ({4:'sort',6:'parts',7:'essay',8:'transfer'}[n]) || 'fields';
-  if(type==='fields' || type==='transfer'){
-    if(lv.prompt) c += `<div class="pq"><b>${esc(lv.prompt)}</b></div>`;
-    const fs = lv.fields||[];
-    if(fs.length){
-      c += '<div class="pf">';
-      fs.forEach(f=>{
-        const ok = f.ans||[];
-        if(has('choices') && f.choices && f.choices.length){
-          c += `<div class="it"><b>${esc(f.label)}</b>：<span class="op">${f.choices.map(x=>`<span class="${ans&&x===disp(f)?'ok':''}">${esc(x)}</span>`).join('')}</span></div>`;
-        } else {
-          const w = Math.max(5, Math.min(16, disp(f).length+2));
-          c += `<div class="it"><b>${esc(f.label)}</b>：<span class="bl" style="min-width:${w}em">${ans?esc(disp(f)):''}</span></div>`;
-        }
-      });
-      c += '</div>';
-      const banks = fs.filter(f=>f.bank&&f.bank.length);
-      if(has('bank')) banks.forEach(f=> c += `<div class="pbank"><b>${esc(f.bankName||(f.label+'提示詞'))}：</b>${f.bank.map(esc).join('、')}</div>`);
-    }
-    if(has('bank') && lv.bank && lv.bank.length) c += `<div class="pbank"><b>${esc(lv.bankName||'提示詞')}：</b>${lv.bank.map(esc).join('、')}</div>`;
-    if(has('frame') && lv.frame) c += `<div class="pframe"><b>句型：</b>${fillFrame(lv.frame, ans)}</div>`;
-    if(lv.sentence!==false){
-      c += `<div class="pq">${esc(lv.sentenceLabel||'寫成完整的句子：')}</div>` + lines(lv.lines||2, ans?lv.model:'' );
-    }
-    if(type==='transfer'){
-      c += `<div class="pck"><b>我會檢查：</b>${(lv.checks||CHECK4.map(x=>x[0])).map(x=>`<span>${esc(x)}</span>`).join('')}</div>`;
-    }
-  } else if(type==='sort'){
-    const ev = lv.events||[];
-    if(has('cards')){
-      const sh = shuffled(ev, 7);
-      c += `<div class="pcards">事件卡（剪下或寫代號排順序）：${sh.map((e,i)=>`<span>${'ABCDEFGH'[i]} ${esc(e)}</span>`).join('')}</div>`;
-      c += `<div class="psort">${ev.map((e,i)=>`<span class="sb">${ans?`<span class="tv" style="color:var(--red)">${'ABCDEFGH'[sh.indexOf(e)]} ${esc(e)}</span>`:''}</span>${i<ev.length-1?'<span>→</span>':''}`).join('')}</div>`;
-    } else {
-      c += `<div class="psort">${ev.map((e,i)=>`<span class="sb" style="min-width:30mm">${ans?`<span class="tv" style="color:var(--red)">${esc(e)}</span>`:''}</span>${i<ev.length-1?'<span>→</span>':''}`).join('')}</div>`;
-    }
-    if(has('bank') && lv.connectors) c += `<div class="pbank"><b>連接詞：</b>${lv.connectors.map(esc).join('、')}</div>`;
-    if(has('frame') && lv.frame) c += `<div class="pframe"><b>句型：</b>${esc(lv.frame)}</div>`;
-    c += `<div class="pq">${esc(lv.sentenceLabel||'用連接詞把事件串成一段話：')}</div>` + lines(lv.lines||3, ans?lv.model:'');
-  } else if(type==='parts'){
-    c += '<div class="pparts">' + (lv.parts||[]).map(p=>`<div><b>${esc(p.label)}</b><small>${esc(p.hint||'')}</small>${has('frame')&&p.starter?`<div style="color:#4f46e5">${esc(p.starter)}……</div>`:''}${ans&&p.model?`<div class="tv" style="color:var(--red)">${esc(p.model)}</div>`:lines(p.lines||3)}</div>`).join('') + '</div>';
-    if(has('bank') && lv.bank) c += `<div class="pbank"><b>${esc(lv.bankName||'提示詞')}：</b>${lv.bank.map(esc).join('、')}</div>`;
-  } else if(type==='essay'){
-    if(lv.prompt) c += `<div class="pq"><b>題目：${esc(lv.prompt)}</b>${lv.words?`（約 ${esc(lv.words)} 字）`:''}</div>`;
-    if(has('frame') && lv.starter) c += `<div class="pframe"><b>開頭可以這樣寫：</b>${esc(lv.starter)}……</div>`;
-    if(has('bank') && lv.bank) c += `<div class="pbank"><b>${esc(lv.bankName||'好用詞語')}：</b>${lv.bank.map(esc).join('、')}</div>`;
-    c += lines(lv.lines||9, ans?lv.model:'', false);
-  }
-  if(has('model') && lv.model && !ans && type!=='essay' && type!=='parts') c += `<div class="pq" style="font-size:10pt;color:#166534">範例：${esc(lv.model)}</div>`;
-  const L_ = LV[n];
-  return `<div class="plv" style="--lc:${color(n)};--lt:${tint(n)}"><div class="pl"><span class="n">${n}</span><b>${esc(lv.name||L_.name)}</b><small>${esc(L_.sub)}</small></div><div class="pc">${c}</div></div>`;
-}
 function shuffled(arr, seed){ // 固定亂數，學習單與網頁一致；保證不是原順序
   const a = arr.map((x,i)=>[x,i]); let s=seed||7;
   for(let i=a.length-1;i>0;i--){ s=(s*9301+49297)%233280; const j=Math.floor(s/233280*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
@@ -372,37 +324,101 @@ function matHTML(cls){
   if(m.text && m.text.length) h += m.text.map(p=>`<p>${esc(p)}</p>`).join('');
   return h;
 }
+function fillFrame(fr, ans){ // 句型 → 空格（教師版填紅字）
+  return esc(fr).replace(/\{(\w+)\}/g,(m,k)=>{
+    const f=FIELDS[k]; const lab=f?f.label.replace(/[（(].*$/,''):k;
+    const v = ans && disp(f);
+    return v ? `<span class="bl in">${esc(v)}</span>` : `<span class="bl in"><small>${esc(lab)}</small></span>`;
+  });
+}
+function lines(n, val){
+  if(val) return String(val).split('\n').map(t=>`<div class="wl ansl">${esc(t)}</div>`).join('');
+  let h=''; for(let i=0;i<n;i++) h+='<div class="wl"></div>'; return h;
+}
+function gridPaper(rows){ let h=''; for(let i=0;i<rows*17;i++) h+='<i></i>'; return `<div class="gridp">${h}</div>`; }
+function bankHTML(name, list){ return `<div class="pbank"><b>${esc(name)}</b>${list.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`; }
+function sheetLevel(n, lv, sup, ans){
+  const has = k=>sup.includes(k);
+  const type = lv.type || ({4:'sort',6:'parts',7:'essay',8:'transfer'}[n]) || 'fields';
+  let c = '';
+  if(type==='fields' || type==='transfer'){
+    if(lv.prompt) c += `<div style="font-weight:700;margin-bottom:1mm">${esc(lv.prompt)}</div>`;
+    const fs = lv.fields||[];
+    if(fs.length){
+      c += '<div class="pf">';
+      fs.forEach(f=>{
+        const opts = has('choices') && f.choices && f.choices.length;
+        const long = opts || disp(f).length>8 || /為何|原因|如何/.test(f.label) || type==='transfer';
+        c += `<div class="it${long?' wide':''}"><b>${esc(f.label)}</b>`;
+        c += opts ? `<span class="op">${f.choices.map(x=>`<span class="${ans&&x===disp(f)?'ok':''}">${esc(x)}</span>`).join('')}</span>`
+                  : `<span class="bl">${ans?esc(disp(f)):''}</span>`;
+        c += '</div>';
+      });
+      c += '</div>';
+      if(has('bank')) fs.filter(f=>f.bank&&f.bank.length).forEach(f=> c += bankHTML(f.bankName||(f.label+'提示詞'), f.bank));
+    }
+    if(has('bank') && lv.bank && lv.bank.length) c += bankHTML(lv.bankName||'提示詞', lv.bank);
+    if(has('frame') && lv.frame) c += `<div class="pframe"><b>句型</b>${fillFrame(lv.frame, ans)}</div>`;
+    if(lv.sentence!==false) c += `<div class="wlab">✏️ ${esc(lv.sentenceLabel||'寫成完整的句子')}</div>` + lines(lv.lines||2, ans?lv.model:'');
+    if(type==='transfer') c += `<div class="pck"><b>我會檢查：</b>${(lv.checks||CHECK4.map(x=>x[0])).map(x=>`<span>${esc(x)}</span>`).join('')}</div>`;
+  } else if(type==='sort'){
+    const ev = lv.events||[]; const L8='ABCDEFGH';
+    if(has('cards')){
+      const sh = shuffled(ev, 7);
+      c += `<div class="pcards">${sh.map((e,i)=>`<span><em>${L8[i]}</em>${esc(e)}</span>`).join('')}</div>`;
+      c += `<div class="psort">${ev.map((e,i)=>`<span class="sb"><sup>${i+1}</sup>${ans?L8[sh.indexOf(e)]:''}</span>${i<ev.length-1?'<span class="ar">➜</span>':''}`).join('')}</div>`;
+    } else {
+      c += `<div class="psort">${ev.map((e,i)=>`<span class="sb wide"><sup>${i+1}</sup>${ans?esc(e):''}</span>${i<ev.length-1?'<span class="ar">➜</span>':''}`).join('')}</div>`;
+    }
+    if(has('bank') && lv.connectors) c += bankHTML('連接詞', lv.connectors);
+    if(has('frame') && lv.frame) c += `<div class="pframe"><b>句型</b>${esc(lv.frame)}</div>`;
+    c += `<div class="wlab">✏️ ${esc(lv.sentenceLabel||'用連接詞串成一段話')}</div>` + lines(lv.lines||3, ans?lv.model:'');
+  } else if(type==='parts'){
+    (lv.parts||[]).forEach(p=>{
+      const ln = p.lines||2;
+      c += `<div class="ppart"><div class="pl">${esc(p.label)}</div><div>${has('frame')&&p.starter&&!ans?`<div class="st">${esc(p.starter)}</div>`+lines(ln-1):lines(ln, ans?p.model:'')}</div></div>`;
+    });
+    if(has('bank') && lv.bank) c += bankHTML(lv.bankName||'提示詞', lv.bank);
+  } else if(type==='essay'){
+    if(lv.prompt) c += `<div style="font-weight:700">題目：${esc(lv.prompt)}${lv.words?`<span style="font-weight:400">（約 ${esc(lv.words)} 字）</span>`:''}</div>`;
+    if(has('frame') && lv.starter) c += `<div class="pframe"><b>開頭</b>${esc(lv.starter)}……</div>`;
+    if(has('bank') && lv.bank) c += bankHTML(lv.bankName||'好用詞語', lv.bank);
+    if(ans) c += `<div class="wlab">範文</div>` + lines(0, lv.model);
+    else { const w=+(String(lv.words||'').match(/\d+/g)||[0]).pop()||0; const rows = lv.rows || (w ? Math.ceil(w*1.1/17)+1 : (lv.lines||10)); c += gridPaper(rows); }
+  }
+  if(has('model') && lv.model && !ans && type!=='essay' && type!=='parts') c += `<div class="pmodel">範例：${esc(lv.model)}</div>`;
+  const q = (type==='essay'||!lv.guide) ? '' : lv.guide;
+  return `<div class="plv" style="--lc:${color(n)};--lt:${tint(n)}"><div class="plh"><span class="n">${n}</span><b>${esc(lv.name||LV[n].name)}</b><span class="q">${esc(q)}</span></div><div class="pc">${c}</div></div>`;
+}
 function renderSheet(teacher){
   document.body.classList.add('paper');
   const vs = teacher ? versions : [versions[VER]||versions[0]];
+  const topic = L.mode==='topic';
   let out = '<div class="sheetwrap">';
   vs.forEach(v=>{
     const sup = supList(v);
     out += `<div class="pg${teacher?' ans':''}">`;
-    out += `<div class="ph"><span>班級：＿＿＿＿</span><span>座號：＿＿＿</span><span>姓名：＿＿＿＿＿＿</span><span>日期：＿＿月＿＿日</span></div>`;
-    out += `<div class="pt">六何寫作學習單<span class="ver">${esc(v.name)}${teacher?'・教師版':''}</span></div>`;
-    out += `<div class="ps">想一想、排一排、說一說，一塊一塊寫出來｜${L.mode==='topic'?'題目':'素材'}：<b>${esc(L.title)}</b></div>`;
-    if(L.goals && L.goals.length) out += `<div class="pgoal"><b>學習目標：</b>${L.goals.map((g,i)=>`${i+1}. ${esc(g)}`).join('　')}</div>`;
-    if(L.core) out += `<div class="pcore"><b>${L.mode==='topic'?'寫作重點':'素材核心'}：</b>${esc(L.core)}</div>`;
-    const ways = ['✏️ 自己寫'];
-    if(sup.includes('choices')) ways.push('◯ 圈一圈');
-    if(sup.includes('bank')) ways.push('🧩 用提示詞');
-    if(sup.includes('speak')) ways.push('🗣️ 先說再寫');
-    out += `<div class="pchoose"><b>每一層都可以：</b>${ways.join('　')}</div>`;
+    out += `<div class="phead"><div class="pb">六何法<b>寫作</b></div><div class="ptt"><h1>${esc(L.title)}</h1><span class="ver">${esc(v.name)}${teacher?'・教師版':''}</span></div></div>`;
+    out += `<div class="pname"><span>班級<i></i></span><span>座號<i class="s"></i></span><span>姓名<i class="w"></i></span><span>日期<i class="s"></i>月<i class="s"></i>日</span></div>`;
+    if(teacher){
+      if(L.core) out += `<div class="pteach"><b>${topic?'寫作重點':'素材核心'}：</b>${esc(L.core)}</div>`;
+      if(L.goals && L.goals.length) out += `<div class="pteach"><b>學習目標：</b>${L.goals.map((g,i)=>`${i+1}. ${esc(g)}`).join('　')}</div>`;
+    }
     const mh = matHTML();
-    if(mh && v.showMaterial!==false) out += `<div class="pmat"><div class="mh">${L.mode==='topic'?'寫作素材':'閱讀素材'}：${esc((L.material||{}).name||L.title)}</div>${mh}</div>`;
+    if(mh && v.showMaterial!==false) out += `<div class="pmat"><div class="mh">${topic?'✏️ 寫作素材':'📖 讀一讀'}：${esc((L.material||{}).name||L.title)}</div>${mh}</div>`;
     lvls(v).forEach(n=> out += sheetLevel(n, L.levels[n], sup, teacher));
-    out += `<div class="pfoot"><b>學習檢核</b>${CHECK4.map(x=>`<span>${x[0]}</span>`).join('')}</div>`;
+    out += `<div class="pfoot"><b>我完成了：</b>${CHECK4.map(x=>`<span>${x[0]}</span>`).join('')}</div>`;
     out += '</div>';
   });
   if(teacher){
     const t = L.teacher||{};
     out += '<div class="pg tsec">';
-    out += `<div class="pt">教學說明<span class="ver">教師用</span></div><div class="ps">${esc(L.title)}${L.grade?'｜'+esc(L.grade):''}</div>`;
+    out += `<h2>教學說明（教師用）</h2><div style="text-align:center;color:#475569">${esc(L.title)}${L.grade?'｜'+esc(L.grade):''}</div>`;
     out += '<h3>版本與學習支持</h3><table><tr><th>版本</th><th>層次</th><th>學習支持</th><th>適用學生</th></tr>';
     versions.forEach(v=> out += `<tr><td>${esc(v.name)}</td><td>${lvls(v).map(n=>n+' '+LV[n].name).join('、')}</td><td>${supList(v).map(s=>SUPS[s]).join('、')}</td><td>${esc(v.for||'')}</td></tr>`);
     out += '</table>';
     out += '<h3>選層建議（可跨層搭配，不必每次完成全部）</h3><table><tr><th>學習需要</th><th>建議層次</th><th>教學重點</th></tr><tr><td>基本句與原因表達</td><td>第 1–3 層</td><td>圈選、口說與句型提示</td></tr><tr><td>敘事組織與描寫</td><td>第 4–6 層</td><td>事件排序、心情與段落</td></tr><tr><td>完整文章整合</td><td>第 7 層（＋第 8 層遷移）</td><td>整合前面所學，完成重述或寫作</td></tr></table>';
+    out += `<h3>各層學習重點</h3><table>${Object.keys(L.levels).map(Number).sort((a,b)=>a-b).map(n=>`<tr><th>${n} ${LV[n].name}</th><td>${LV[n].sub}｜${LV[n].focus}${L.levels[n].guide?'<br>引導語：'+esc(L.levels[n].guide):''}</td></tr>`).join('')}</table>`;
     if(t.tips && t.tips.length) out += `<h3>教學提示</h3><ul>${t.tips.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
     const adj = t.adjust || {};
     if(Object.keys(adj).length){ out += '<h3>課程調整四面向（可貼入 IEP 或教學紀錄）</h3><table>'; ['學習內容','學習歷程','學習環境','學習評量'].forEach(k=>{ if(adj[k]) out += `<tr><th>${k}</th><td>${esc(adj[k])}</td></tr>`; }); out += '</table>'; }
@@ -623,7 +639,7 @@ function menuHTML(){
   <h3>報讀</h3><label class="sw">語速 <select onchange="try{localStorage.setItem(KEY+'rate',this.value)}catch(e){}"><option value="0.7">慢</option><option value="0.9" selected>中</option><option value="1.1">快</option></select></label>
   <label class="sw">語音 <select id="vsel" onchange="try{localStorage.setItem(KEY+'voice',this.value)}catch(e){};pickVoice();speak('你好，我是報讀小幫手。')"></select></label>
   <h3>其他</h3>
-  <button class="mb" onclick="document.body.classList.toggle('kai')">字型：芫荽／標楷體 切換</button>
+  <h3>字型</h3><div class="seg">${[['iansui','芫荽'],['kai','標楷'],['bpmf','芫荽注音']].map(([k,t])=>`<button class="${curFont()===k?'on':''}" onclick="setFont('${k}');renderWeb();menu(true)">${t}</button>`).join('')}</div>
   <button class="mb" onclick="showRec()">📋 作答紀錄</button>
   <button class="mb" onclick="toggleFS()">⛶ 全螢幕</button>
   <button class="mb" onclick="if(confirm('要清除這台電腦上的全部作答嗎？')){Object.assign(S,blank());save();menu(false);renderWeb();}">🗑 清除作答</button>
@@ -657,7 +673,15 @@ function showRec(){ menu(false); buildRec(); $('#rec').classList.add('show'); }
 function copyRec(){ const t=buildRec(); (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('已複製'),()=>{ const r=document.createRange(); r.selectNode($('#recText')); getSelection().removeAllRanges(); getSelection().addRange(r); document.execCommand('copy'); toast('已複製'); }); }
 function printRec(){ const w=window.open(''); w.document.write(`<pre style="font-family:${getComputedStyle(document.body).fontFamily};white-space:pre-wrap;font-size:14pt">${esc(buildRec())}</pre>`); w.document.close(); w.print(); }
 
+/* ---- 字型：芫荽（預設）／標楷（教育部標準楷書優先）／芫荽注音 ---- */
+function curFont(){ return document.body.classList.contains('kai')?'kai':document.body.classList.contains('bpmf')?'bpmf':'iansui'; }
+function setFont(k){
+  document.body.classList.remove('kai','bpmf'); if(k!=='iansui') document.body.classList.add(k);
+  if(k==='bpmf' && !document.getElementById('bpmfFont')){ const l=document.createElement('link'); l.id='bpmfFont'; l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?family=Bpmf+Iansui&display=swap'; document.head.appendChild(l); }
+  try{ if(MODE==='web') localStorage.setItem(KEY+'font',k); }catch(e){}
+}
 /* ---- 啟動 ---- */
+(()=>{ let f=L.font||'iansui'; try{ if(MODE==='web') f=localStorage.getItem(KEY+'font')||f; }catch(e){} setFont(f); })();
 try{ const f=localStorage.getItem(KEY+'fs'); if(f) document.documentElement.style.setProperty('--fs',f); }catch(e){}
 if(MODE==='sheet') renderSheet(false); else if(MODE==='teacher') renderSheet(true); else renderWeb();
 <\/script>

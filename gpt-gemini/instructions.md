@@ -28,6 +28,7 @@
   "title": "題目",
   "mode": "text 或 topic（text＝有素材可對答案；topic＝寫自己的經驗，全部開放題）",
   "grade": "年級",
+  "font": "iansui（芫荽，預設）／kai（標楷）／bpmf（芫荽注音）",
   "material": {"name": "〈素材名稱〉", "text": ["第一段", "第二段"]},
   "core": "一句話說素材核心或寫作重點",
   "goals": ["目標一", "目標二", "目標三"],
@@ -78,5 +79,5 @@
 - 學習支持代碼：choices 圈選、bank 提示詞／詞庫、frame 句型、cards 事件卡、model 範例、speak 先說再寫。`support` 用預設（多＝全部；中＝bank、frame、cards、speak；少＝speak），要細調就改寫 `"supports": ["choices","frame","speak"]`。
 - 老師描述個別學生時，替每位學生建一個版本，`for` 寫適用情形。
 - `teacher.adjust` 寫課程調整四面向，可貼入 IEP。
-- 低干擾：引導語一句、句子短、一層一個任務；不加任何 logo。
+- 低干擾：引導語一句、句子短、一層一個任務；學習目標與說明只放教師版；不加任何 logo。字型不用黑體。
 - topic 模式：第 1–3 層改問學生自己（「這件事有誰？」），choices 當靈感；第 4 層 events 放常見事件順序。
