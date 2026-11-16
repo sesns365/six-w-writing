@@ -12,7 +12,7 @@
     <題目>_互動網頁.html          學生一層一層寫（含全部版本，開啟時選版本）
     <題目>_學習單_<版本>.html/.pdf 每個版本一份，A4 列印
     <題目>_教師版.html/.pdf        全部版本的參考答案＋教學說明
-    <題目>_學習單.docx             Word 版（學生版各版本＋教師版），可再編修
+    <題目>_學習單_<版本>.docx／<題目>_教師版.docx  可編輯的 Word 版
 
 需求：
     PDF ：playwright（pip install playwright && playwright install chromium），
@@ -209,7 +209,8 @@ def pdf_by_browser(html: Path, out: Path) -> bool:
 
 
 # ---------------------------------------------------------------- DOCX
-def to_docx(L, out: Path, font="標楷體") -> bool:
+def to_docx(L, out: Path, font="標楷體", only=None) -> bool:
+    """only：版本編號（學生版只輸出該版本）或 "teacher"（全部版本答案＋教學說明）。"""
     try:
         from docx import Document
         from docx.enum.table import WD_ROW_HEIGHT_RULE, WD_TABLE_ALIGNMENT
@@ -221,15 +222,16 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
         print("沒有 python-docx，略過 Word。（pip install python-docx）")
         return False
     RED = RGBColor(0xDC, 0x26, 0x26)
+    LINE = {1: "3B82F6", 2: "10B981", 3: "8B5CF6", 4: "EC4899", 5: "F59E0B", 6: "14B8A6", 7: "6366F1", 8: "0EA5E9"}
     COL = {1: "DBEAFE", 2: "D1FAE5", 3: "EDE9FE", 4: "FCE7F3", 5: "FEF3C7", 6: "CCFBF1", 7: "E0E7FF", 8: "E0F2FE"}
     doc = Document()
     sec = doc.sections[0]
     sec.page_width, sec.page_height = Mm(210), Mm(297)
     for s in ("left_margin", "right_margin", "top_margin", "bottom_margin"):
-        setattr(sec, s, Mm(13))
+        setattr(sec, s, Mm(12))
     st = doc.styles["Normal"]
     st.font.name = font
-    st.font.size = Pt(12)
+    st.font.size = Pt(13)
     st.element.rPr.rFonts.set(qn("w:eastAsia"), font)
     st.paragraph_format.space_after = Pt(2)
 
@@ -254,6 +256,35 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
         if size:
             r.font.size = Pt(size)
         return r
+
+    def borders(table, color, sz=12):
+        tblPr = table._tbl.tblPr
+        bd = OxmlElement("w:tblBorders")
+        for side in ("top", "left", "bottom", "right", "insideH", "insideV"):
+            e = OxmlElement("w:" + side)
+            for k, v in (("val", "single"), ("sz", str(sz)), ("space", "0"), ("color", color)):
+                e.set(qn("w:" + k), v)
+            bd.append(e)
+        tblPr.append(bd)
+
+    def keep_rows(table):
+        for r in table.rows:
+            trPr = r._tr.get_or_add_trPr()
+            cs = OxmlElement("w:cantSplit")
+            trPr.append(cs)
+        for r in table.rows[:-1]:
+            for c in r.cells:
+                for p in c.paragraphs:
+                    p.paragraph_format.keep_with_next = True
+
+    def pshade(p, fill):
+        pPr = p._p.get_or_add_pPr()
+        sh = OxmlElement("w:shd")
+        sh.set(qn("w:val"), "clear")
+        sh.set(qn("w:color"), "auto")
+        sh.set(qn("w:fill"), fill)
+        pPr.append(sh)
+        return p
 
     def shade(cell, hexcolor):
         tcPr = cell._tc.get_or_add_tcPr()
@@ -344,13 +375,16 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
     def level(n, lv, sup, ans):
         t = doc.add_table(rows=2, cols=1)
         t.style = "Table Grid"
+        borders(t, LINE.get(n, "94A3B8"))
         hc, cc = t.rows[0].cells[0], t.rows[1].cells[0]
         shade(hc, COL.get(n, "F1F5F9"))
         hp = hc.paragraphs[0]
-        run(hp, f"{n}  {lv.get('name') or LV_NAME[n]}", bold=True, size=13)
+        nr = run(hp, f" {n} ", bold=True, size=13)
+        nr.font.color.rgb = RGBColor.from_string(LINE.get(n, "334155"))
+        run(hp, f"{lv.get('name') or LV_NAME[n]}", bold=True, size=14)
         tp = ltype(n, lv)
         if lv.get("guide") and tp != "essay":
-            run(hp, "　" + lv["guide"], size=11.5)
+            run(hp, "　" + lv["guide"], size=12)
         cp = cc.paragraphs[0]
         first = [True]
 
@@ -378,11 +412,11 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
             if "bank" in sup:
                 for f in lv.get("fields", []):
                     if f.get("bank"):
-                        cpara(f"【{f.get('bankName') or f['label'] + '提示詞'}】" + "　".join(f["bank"]), size=11)
+                        pshade(cpara(f"【{f.get('bankName') or f['label'] + '提示詞'}】" + "　".join(f["bank"]), size=11.5), "FFF4E6")
                 if lv.get("bank"):
-                    cpara(f"【{lv.get('bankName') or '提示詞'}】" + "　".join(lv["bank"]), size=11)
+                    pshade(cpara(f"【{lv.get('bankName') or '提示詞'}】" + "　".join(lv["bank"]), size=11.5), "FFF4E6")
             if "frame" in sup and lv.get("frame"):
-                cpara("【句型】" + frame_text(lv["frame"], ans), size=12)
+                pshade(cpara("【句型】" + frame_text(lv["frame"], ans), size=12.5), "EEF2FF")
             if lv.get("sentence", True):
                 cpara("✎ " + (lv.get("sentenceLabel") or "寫成完整的句子"))
                 lines(cc, lv.get("lines", 2), lv.get("model") if ans else None)
@@ -405,9 +439,9 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
                     if i < len(ev) - 1:
                         run(p, " ➜ ")
             if "bank" in sup and lv.get("connectors"):
-                cpara("【連接詞】" + "　".join(lv["connectors"]), size=11)
+                pshade(cpara("【連接詞】" + "　".join(lv["connectors"]), size=11.5), "FFF4E6")
             if "frame" in sup and lv.get("frame"):
-                cpara("【句型】" + lv["frame"], size=12)
+                pshade(cpara("【句型】" + lv["frame"], size=12.5), "EEF2FF")
             cpara("✎ " + (lv.get("sentenceLabel") or "用連接詞串成一段話"))
             lines(cc, lv.get("lines", 3), lv.get("model") if ans else None)
         elif tp == "parts":
@@ -420,14 +454,14 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
                 else:
                     lines(cc, p_.get("lines", 2), p_.get("model") if ans else None)
             if "bank" in sup and lv.get("bank"):
-                cpara(f"【{lv.get('bankName') or '提示詞'}】" + "　".join(lv["bank"]), size=11)
+                pshade(cpara(f"【{lv.get('bankName') or '提示詞'}】" + "　".join(lv["bank"]), size=11.5), "FFF4E6")
         elif tp == "essay":
             if lv.get("prompt"):
                 cpara(f"題目：{lv['prompt']}" + (f"（約 {lv['words']} 字）" if lv.get("words") else ""), bold=True)
             if "frame" in sup and lv.get("starter"):
-                cpara("【開頭】" + lv["starter"] + "……", size=12)
+                pshade(cpara("【開頭】" + lv["starter"] + "……", size=12.5), "EEF2FF")
             if "bank" in sup and lv.get("bank"):
-                cpara(f"【{lv.get('bankName') or '好用詞語'}】" + "　".join(lv["bank"]), size=11)
+                pshade(cpara(f"【{lv.get('bankName') or '好用詞語'}】" + "　".join(lv["bank"]), size=11.5), "FFF4E6")
             if ans:
                 lines(cc, 0, lv.get("model"))
             else:
@@ -435,7 +469,8 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
                 rows = lv.get("rows") or (-(-int(int(nums[-1]) * 1.1) // 17) + 1 if nums else lv.get("lines", 10))
                 grid_paper(cc, rows)
         if "model" in sup and lv.get("model") and not ans and tp not in ("essay", "parts"):
-            cpara("範例：" + lv["model"], size=10.5, color=RGBColor(0x16, 0x65, 0x34))
+            pshade(cpara("範例：" + lv["model"], size=11, color=RGBColor(0x16, 0x65, 0x34)), "F0FDF4")
+        keep_rows(t)
         para(doc, "", size=6)
 
     def sheet(v, ans):
@@ -450,6 +485,14 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
         for i, w in enumerate((Mm(28), Mm(156))):
             h.columns[i].width = w
             h._tbl.tblGrid.findall(qn("w:gridCol"))[i].set(qn("w:w"), str(int(w.twips)))
+        tw = OxmlElement("w:tblW")
+        tw.set(qn("w:w"), str(int(Mm(184).twips)))
+        tw.set(qn("w:type"), "dxa")
+        old = h._tbl.tblPr.find(qn("w:tblW"))
+        if old is not None:
+            h._tbl.tblPr.remove(old)
+        h._tbl.tblPr.append(tw)
+        borders(h, "334155", 16)
         a.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
         r = run(a.paragraphs[0], "六何法\n寫作", bold=True, size=14)
         r.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
@@ -474,15 +517,23 @@ def to_docx(L, out: Path, font="標楷體") -> bool:
             para(doc, "", size=6)
         for n in v["levels"]:
             level(int(n), L["levels"][str(n)], sup, ans)
-        para(doc, "我完成了：" + "　".join("☐ " + x[0] for x in CHECK4), size=12)
+        last = doc.tables[-1].rows[-1].cells[0]  # 放進最後一層，避免單獨跑到新的一頁
+        para(last, "我完成了：" + "　".join("☐ " + x[0] for x in CHECK4), size=12, bold=True)
+        tail = doc.paragraphs[-1]  # 表格後面的空段落縮到最小，避免多出一頁空白
+        tail.paragraph_format.line_spacing = Pt(1)
+        tail.paragraph_format.space_after = Pt(0)
+        for r in tail.runs:
+            r.font.size = Pt(1)
 
     vs = L["versions"]
+    if only != "teacher":
+        sheet(vs[only or 0], False)
+        doc.save(out)
+        print(f"Word：{out}")
+        return True
     for i, v in enumerate(vs):
         if i:
             doc.add_page_break()
-        sheet(v, False)
-    for v in vs:
-        doc.add_page_break()
         sheet(v, True)
     doc.add_page_break()
     para(doc, "教學說明（教師用）", size=18, bold=True, align="c")
@@ -565,7 +616,9 @@ def main():
             to_pdf(tmp, h.with_suffix(".pdf"))
         tmp.unlink(missing_ok=True)
     if not a.no_docx:
-        to_docx(L, out / f"{name}_學習單.docx", word_font)
+        for i, v in enumerate(L["versions"]):
+            to_docx(L, out / f"{name}_學習單_{safe(v['name'])}.docx", word_font, i)
+        to_docx(L, out / f"{name}_教師版.docx", word_font, "teacher")
 
 
 if __name__ == "__main__":
