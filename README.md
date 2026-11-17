@@ -14,6 +14,8 @@
 
 改編自：https://courses.dale.nthu.edu.tw/repo/14342（閱讀理解策略應用與實作社群「閱讀延伸寫作策略：六何法分層寫作教材」）
 
+📘 **安裝教學網頁**：https://sesns365.github.io/six-w-writing/ （一步一步教你在 Claude、ChatGPT、Gemini 安裝，也能下載安裝檔）
+
 ## 七個層次
 
 | 層 | 名稱 | 教材內容 | 學習重點 |
@@ -95,7 +97,7 @@ https://raw.githubusercontent.com/sesns365/six-w-writing/main/gpt-gemini/instruc
 
 不能執行程式的 AI 會給你一段 **lesson.json**。打開製作頁，把它貼上就能預覽、下載互動網頁，學習單和教師版按「列印／存 PDF」：
 
-**https://sesns365.github.io/six-w-writing/**
+**https://sesns365.github.io/six-w-writing/maker.html**
 
 ![製作頁](docs/screenshots/maker.png)
 
@@ -110,7 +112,7 @@ https://raw.githubusercontent.com/sesns365/six-w-writing/main/gpt-gemini/instruc
 
 ### Claude
 
-1. 把 `six-w-writing` 資料夾單獨壓縮成 zip（內含 `SKILL.md`、`assets`、`references`、`scripts`）。
+1. 下載 repo 裡的 `six-w-writing.zip`（已經壓縮好，內含 `SKILL.md`、`assets`、`references`、`scripts`）。
 2. 到 Claude 的「設定 → 功能（Capabilities）→ Skills」上傳這個 zip。
 3. 開新對話，說「六何法分層寫作」並給題目或素材，skill 會自動啟用。
 
@@ -145,7 +147,9 @@ Claude Code 使用者可以直接把 `six-w-writing` 資料夾放到 `~/.claude/
 | `six-w-writing/scripts/build.py` | lesson.json → 互動網頁、學習單 PDF、教師版、Word |
 | `six-w-writing/references/lesson-guide.md` | lesson.json 欄位說明 |
 | `six-w-writing/references/example-lesson.json` | 範例〈小安學騎腳踏車〉 |
-| `index.html` | 線上製作頁（由 `tools/make_maker.py` 產生） |
+| `index.html` | 安裝教學首頁 |
+| `maker.html` | 線上製作頁（由 `tools/make_maker.py` 產生） |
+| `six-w-writing.zip` | Claude 安裝檔（skill 資料夾壓縮檔） |
 
 ## 授權
 

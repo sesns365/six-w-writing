@@ -75,7 +75,7 @@ python scripts/build.py lesson.json -o 輸出資料夾 --font kai  # 標楷；�
 
 ## 不能執行 Python 時
 
-無法執行程式的環境（例如 Claude 網頁版沒有程式執行、ChatGPT、Gemini）：照步驟 1–2 寫好 lesson.json，請老師打開線上製作頁 https://sesns365.github.io/six-w-writing/ ，貼上 JSON 就能預覽並下載互動網頁、學習單與教師版（列印另存 PDF）。
+無法執行程式的環境（例如 Claude 網頁版沒有程式執行、ChatGPT、Gemini）：照步驟 1–2 寫好 lesson.json，請老師打開線上製作頁 https://sesns365.github.io/six-w-writing/maker.html ，貼上 JSON 就能預覽並下載互動網頁、學習單與教師版（列印另存 PDF）。
 
 ## 注意
 

@@ -3,729 +3,167 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>六何法分層寫作製作頁</title>
-<link href="https://fonts.googleapis.com/css2?family=Iansui&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#f4f7fb;--card:#fff;--ink:#1f2937;--mut:#6b7280;--pri:#2563eb;--line:#e5e7eb}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f172a;--card:#1e293b;--ink:#e5e7eb;--mut:#94a3b8;--line:#334155}}
-:root[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--ink:#e5e7eb;--mut:#94a3b8;--line:#334155}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iansui","芫荽","標楷體",sans-serif;line-height:1.6}
-header{padding:20px 16px 8px;max-width:1200px;margin:0 auto}
-h1{margin:0;font-size:1.6em}
-header p{margin:4px 0;color:var(--mut)}
-main{max-width:1200px;margin:0 auto;padding:8px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px}
-@media(max-width:900px){main{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-textarea{width:100%;height:60vh;font-family:ui-monospace,Consolas,monospace;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);color:var(--ink)}
-.btns{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
-button,select{font:inherit;border:0;border-radius:10px;padding:8px 14px;background:#e0ecff;color:#1e3a8a;cursor:pointer}
-button.pri{background:var(--pri);color:#fff}
-#msg{min-height:1.5em;font-size:.92em}
-#msg.err{color:#dc2626}#msg.ok{color:#16a34a}
-iframe{width:100%;height:75vh;border:1px solid var(--line);border-radius:10px;background:#fff}
-ol{margin:6px 0;padding-left:1.3em;color:var(--mut);font-size:.92em}
-</style>
-</head>
-<body>
-<header>
-  <h1>✏️ 六何法分層寫作製作頁</h1>
-  <p>把 AI 給你的 lesson.json 貼到左邊，按「預覽」，再下載互動網頁或學習單。</p>
-  <ol><li>在 ChatGPT／Gemini／Claude 用六何法分層寫作小幫手產生 lesson.json。</li><li>全部複製貼到左邊（會先放範例〈小安學騎腳踏車〉）。</li><li>學習單、教師版按「列印／存 PDF」。</li></ol>
-</header>
-<main>
-  <section class="card">
-    <textarea id="src" spellcheck="false"></textarea>
-    <div id="msg"></div>
-  </section>
-  <section class="card">
-    <div class="btns">
-      <button class="pri" onclick="show('web')">預覽互動網頁</button>
-      <select id="ver"></select>
-      <button onclick="show('sheet')">預覽學習單</button>
-      <button onclick="show('teacher')">預覽教師版</button>
-    </div>
-    <div class="btns">
-      <button class="pri" onclick="dl()">⬇ 下載目前預覽的 HTML</button>
-      <button onclick="printIt()">🖨 列印／存 PDF</button>
-    </div>
-    <iframe id="pv" title="預覽"></iframe>
-  </section>
-</main>
-<script id="tpl" type="text/plain"><!doctype html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>六何法分層寫作小幫手</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Iansui&display=swap" rel="stylesheet">
-<title>六何法分層寫作</title>
-<!--
-  六何法分層寫作小幫手（six-w-writing）範本
-  - 不要手改這個檔案的內容，請改 lesson.json，再用 scripts/build.py 產生：
-      互動網頁（MODE=web）、學生學習單（MODE=sheet）、教師版（MODE=teacher）。
-  - 資料放在 <script id="lesson" type="application/json">，由下方程式畫出畫面。
--->
 <style>
-:root{
-  --kai:"教育部標準楷書","TW-MOE-Std-Kai","標楷體","DFKai-SB","BiauKai","TW-Kai";
-  --font:"Iansui","芫荽",var(--kai),serif;  /* 預設芫荽；不用黑體（筆順不符台灣標準字體） */
-  --ink:#1f2937; --muted:#6b7280; --line:#cbd5e1; --bg:#f4f7fb; --paper:#fff;
-  --c1:#3b82f6; --c2:#10b981; --c3:#8b5cf6; --c4:#ec4899; --c5:#f59e0b; --c6:#14b8a6; --c7:#6366f1; --c8:#0ea5e9;
-  --t1:#eff6ff; --t2:#ecfdf5; --t3:#f5f3ff; --t4:#fdf2f8; --t5:#fffbeb; --t6:#f0fdfa; --t7:#eef2ff; --t8:#f0f9ff;
-  --red:#dc2626; --fs:1;
-}
+:root{--bg:#f8fafc;--card:#fff;--ink:#1f2937;--sub:#4b5563;--line:#e5e7eb;--acc:#2563eb;--soft:#eff6ff;--ok:#16a34a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--sub:#cbd5e1;--line:#334155;--acc:#60a5fa;--soft:#1e3a5f}}
+:root[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--sub:#cbd5e1;--line:#334155;--acc:#60a5fa;--soft:#1e3a5f}
 *{box-sizing:border-box}
-html,body{margin:0}
-body{font-family:var(--font);color:var(--ink);background:var(--bg);font-size:calc(18px * var(--fs));line-height:1.6}
-body.kai{--font:var(--kai),serif}
-body.bpmf{--font:"Bpmf Iansui","芫荽注音","Iansui","芫荽",var(--kai),serif;line-height:2}
-button{font:inherit;cursor:pointer}
-input,textarea,select{font:inherit;color:inherit}
-.hide{display:none !important}
-
-/* ================= 互動網頁 ================= */
-.bar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-.bar .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 12px;max-width:1000px;margin:0 auto}
-.bar .ttl{font-weight:700;font-size:1.05em;margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
-.big{border:0;border-radius:12px;padding:8px 14px;min-height:46px;font-size:1em;background:#e0ecff;color:#1e3a8a}
-.big.go{background:#2563eb;color:#fff}
-.big.ok{background:#16a34a;color:#fff}
-.big:disabled{opacity:.4;cursor:default}
-.blocks{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:6px 12px 10px;max-width:1000px;margin:0 auto}
-.blk{border:2px solid transparent;border-radius:10px;padding:4px 10px;font-size:.8em;background:#f1f5f9;color:#475569;cursor:pointer;display:flex;gap:6px;align-items:center}
-.blk b{display:inline-grid;place-items:center;width:1.6em;height:1.6em;border-radius:50%;background:#94a3b8;color:#fff;font-size:.9em}
-.blk.done{background:#dcfce7;color:#166534}.blk.done b{background:#16a34a}
-.blk.cur{border-color:#2563eb;background:#dbeafe;color:#1e3a8a}.blk.cur b{background:#2563eb}
-.wrap{max-width:1000px;margin:0 auto;padding:16px 12px 120px}
-.card{background:var(--paper);border-radius:18px;box-shadow:0 2px 12px rgba(15,23,42,.08);padding:20px 22px;margin-bottom:16px}
-.lvh{display:flex;align-items:center;gap:12px;margin:-20px -22px 16px;padding:14px 22px;border-radius:18px 18px 0 0;color:#fff}
-.lvh .num{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.25);display:grid;place-items:center;font-size:1.3em;font-weight:700}
-.lvh h2{margin:0;font-size:1.25em}
-.lvh small{display:block;font-size:.72em;opacity:.95;font-weight:400}
-.lvh .say{margin-left:auto}
-.say{border:0;background:#fff;color:#1e3a8a;border-radius:50%;width:42px;height:42px;font-size:1.1em;flex:none}
-.say.sm{width:34px;height:34px;font-size:.9em;background:#eef2ff}
-.guide{background:#f8fafc;border-left:6px solid var(--lc,#3b82f6);padding:10px 14px;border-radius:8px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
-.guide p{margin:0;flex:1}
-.field{display:grid;grid-template-columns:8.5em 1fr;gap:6px 12px;align-items:start;padding:10px 0;border-bottom:1px dashed #e5e7eb}
-.field:last-of-type{border-bottom:0}
-.field .lab{font-weight:700;color:var(--lc,#1e3a8a)}
-.field .lab small{display:block;font-weight:400;color:var(--muted);font-size:.75em}
-.inrow{display:flex;gap:8px;align-items:center}
-.inrow input,.inrow textarea{flex:1}
-input.t,textarea.t{border:2px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff;width:100%;min-height:46px}
-textarea.t{resize:vertical;line-height:1.8}
-input.t:focus,textarea.t:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-.t.good{border-color:#16a34a;background:#f0fdf4}
-.t.try{border-color:#f59e0b;background:#fffbeb}
-.mic{border:0;background:#fef3c7;border-radius:10px;min-width:46px;min-height:46px;font-size:1.1em}
-.mic.on{background:#ef4444;color:#fff;animation:pulse 1s infinite}
-@keyframes pulse{50%{opacity:.6}}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.chip{border:2px solid #cbd5e1;background:#fff;border-radius:999px;padding:4px 14px;min-height:40px;font-size:.95em}
-.chip.on{border-color:#2563eb;background:#dbeafe;color:#1e3a8a}
-.chip:hover{border-color:#94a3b8}
-.box{border-radius:12px;padding:10px 14px;margin:12px 0}
-.box .bh{font-weight:700;font-size:.85em;color:var(--muted);margin-bottom:4px}
-.bank{background:#fff7ed;border:1px dashed #fdba74}
-.bank .chip{border-color:#fdba74}
-.frame{background:#eef2ff;border:1px dashed #a5b4fc}
-.frame .fv{display:inline-block;min-width:3em;border-bottom:2px solid #6366f1;color:#1e3a8a;font-weight:700;padding:0 4px;text-align:center}
-.frame .fv.empty{color:#a5b4fc;font-weight:400;font-size:.8em}
-.sent{margin-top:12px}
-.sent .sl{font-weight:700;margin-bottom:6px;display:flex;gap:8px;align-items:center}
-details.model{background:#f0fdf4;border:1px dashed #86efac;border-radius:12px;padding:8px 14px;margin-top:12px}
-details.model summary{cursor:pointer;font-weight:700;color:#166534}
-.fb{margin-top:12px;padding:10px 14px;border-radius:10px;display:none}
-.fb.show{display:block}
-.fb.good{background:#dcfce7;color:#166534}
-.fb.try{background:#fef3c7;color:#92400e}
-.sort{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
-.slot{min-width:7.5em;min-height:52px;border:2px dashed #94a3b8;border-radius:12px;padding:6px 10px;display:flex;align-items:center;justify-content:center;text-align:center;background:#f8fafc;cursor:pointer;font-size:.9em}
-.slot.fill{border-style:solid;border-color:#ec4899;background:#fdf2f8}
-.slot.good{border-color:#16a34a;background:#dcfce7}
-.slot.bad{border-color:#f59e0b;background:#fef3c7}
-.arrow{color:#94a3b8;font-size:1.2em}
-.ecard{border:2px solid #f9a8d4;background:#fff;border-radius:12px;padding:6px 12px;min-height:52px;font-size:.9em}
-.ecard.used{opacity:.3;pointer-events:none}
-.part{border-radius:12px;padding:10px 14px;margin:10px 0;border:2px solid #e5e7eb}
-.part h3{margin:0 0 6px;font-size:1em;display:flex;gap:8px;align-items:center}
-.part h3 small{color:var(--muted);font-weight:400}
-.starter{color:#4f46e5;font-size:.9em;margin-bottom:6px}
-.mats{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:.9em}
-.mats ol{margin:4px 0 0;padding-left:1.4em}
-.cnt{font-size:.85em;color:var(--muted);text-align:right}
-.checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.checks label{display:flex;gap:6px;align-items:center;background:#f1f5f9;border-radius:10px;padding:6px 12px;cursor:pointer}
-.checks input{width:22px;height:22px}
-.mat{white-space:pre-wrap}
-.mat p{margin:.3em 0;text-indent:2em}
-.mat img,.sheetwrap .mat img{max-width:100%;border-radius:10px}
-.navb{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
-.menu{position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:50;display:none}
-.menu.show{display:block}
-.menu .pan{position:absolute;right:0;top:0;bottom:0;width:min(380px,92vw);background:#fff;padding:16px;overflow:auto}
-.menu h3{margin:14px 0 6px;font-size:.95em;color:var(--muted)}
-.menu .mb{display:block;width:100%;text-align:left;margin:4px 0;border:0;background:#f1f5f9;border-radius:10px;padding:10px 12px}
-.menu label.sw{display:flex;gap:8px;align-items:center;padding:6px 4px}
-.menu label.sw input{width:22px;height:22px}
-.seg{display:flex;gap:6px}
-.seg button{flex:1;border:2px solid #cbd5e1;background:#fff;border-radius:10px;padding:6px}
-.seg button.on{border-color:#2563eb;background:#dbeafe}
-#rec{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:60;display:none;align-items:center;justify-content:center}
-#rec.show{display:flex}
-#rec .rb{background:#fff;border-radius:16px;padding:16px;width:min(720px,94vw);max-height:90vh;overflow:auto}
-#rec pre{white-space:pre-wrap;background:#f8fafc;border-radius:10px;padding:10px;font-family:var(--font);font-size:.85em}
-.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 18px;border-radius:12px;z-index:70;display:none}
-.speak{background:#fef08a !important;border-radius:6px}
-.pick{max-width:640px;margin:40px auto;text-align:center}
-.pick .big{display:block;width:100%;margin:10px 0}
-
-/* ================= 學習單（列印） =================
-   學生版：只留題目與作答空間，不放教學說明；書寫線 10mm、完整寫作用方格稿紙。 */
-body.paper{background:#e5e7eb;font-size:13pt;line-height:1.6}
-.sheetwrap{width:210mm;margin:0 auto}
-.pg{background:#fff;width:210mm;min-height:297mm;padding:11mm 12mm;margin:10px auto;box-shadow:0 2px 10px rgba(0,0,0,.12)}
-.phead{display:flex;align-items:stretch;gap:0;border:2px solid #334155;border-radius:12px;overflow:hidden}
-.phead .pb{background:#334155;color:#fff;padding:4px 12px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:11pt;line-height:1.25;text-align:center;min-width:24mm}
-.phead .pb b{font-size:15pt;letter-spacing:2px}
-.phead .ptt{flex:1;padding:4px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.phead .ptt h1{margin:0;font-size:20pt;font-weight:700;line-height:1.3}
-.phead .ptt .ver{font-size:10.5pt;border:1.5px solid #334155;border-radius:999px;padding:0 10px;white-space:nowrap}
-.pname{display:flex;gap:6mm;margin:3mm 1mm 2mm;font-size:12pt;align-items:flex-end}
-.pname span{display:flex;align-items:flex-end;gap:2px;white-space:nowrap}
-.pname i{display:inline-block;border-bottom:1.5px solid #334155;width:14mm;height:7mm}
-.pname i.w{width:34mm}.pname i.s{width:9mm}
-.pteach{font-size:10.5pt;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:3px 10px;margin:2mm 0}
-.pmat{border:1.5px solid #94a3b8;border-radius:10px;padding:2mm 4mm;margin:2mm 0 3mm;font-size:12pt;line-height:1.75;break-inside:avoid}
-.pmat .mh{font-weight:700;font-size:12pt;margin-bottom:1mm}
-.pmat p{margin:0;text-indent:2em}
-.pmat img{display:block;margin:1mm auto;max-height:55mm;max-width:100%}
-.plv{border:2px solid var(--lc);border-radius:12px;margin:0 0 4mm;break-inside:avoid;page-break-inside:avoid;overflow:hidden}
-.plh{display:flex;align-items:center;gap:3mm;background:var(--lt);border-bottom:1.5px solid var(--lc);padding:1.5mm 4mm}
-.plh .n{flex:none;width:8mm;height:8mm;border-radius:50%;background:var(--lc);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12pt}
-.plh b{flex:none;font-size:14pt;color:#1f2937}
-.plh .q{font-size:12pt;color:#334155}
-.pc{padding:2.5mm 4mm 3mm}
-.pf{display:flex;flex-wrap:wrap;gap:1mm 7mm;align-items:flex-end}
-.pf .it{display:flex;align-items:flex-end;gap:2mm;min-height:10mm;flex:1 1 52mm}
-.pf .it.wide{flex-basis:100%}
-.pf .it>b{white-space:nowrap;font-size:12.5pt}
-.bl{display:inline-block;flex:1;min-width:24mm;border-bottom:1.5px solid #475569;min-height:9mm;line-height:9mm;text-align:center;padding:0 2mm}
-.bl.in{flex:none;min-width:22mm;min-height:8mm;line-height:8mm;margin:0 1.5mm}
-.bl small{color:#94a3b8;font-size:8.5pt}
-.op{display:flex;flex-wrap:wrap;gap:2mm 3mm}
-.op span{border:1.5px solid #94a3b8;border-radius:999px;padding:0 4mm;line-height:8mm;font-size:12pt}
-.op span.ok{border-color:var(--red);color:var(--red);box-shadow:0 0 0 1.5px var(--red)}
-.pbank{display:flex;flex-wrap:wrap;gap:1.5mm 2mm;align-items:center;margin:2mm 0 0;font-size:11pt}
-.pbank b{font-size:10.5pt;color:#9a3412;background:#ffedd5;border-radius:5px;padding:0 2mm}
-.pbank span{border:1px dashed #fdba74;border-radius:6px;padding:0 2mm;background:#fffaf5}
-.pframe{background:#f5f7ff;border:1.5px dashed #a5b4fc;border-radius:8px;padding:1mm 3mm;margin:2.5mm 0 0;line-height:11mm;font-size:12.5pt}
-.pframe>b{font-size:10.5pt;color:#4338ca;background:#e0e7ff;border-radius:5px;padding:0 2mm;margin-right:2mm}
-.wlab{margin-top:2.5mm;font-size:12pt;color:#334155}
-.wl{border-bottom:1.5px solid #94a3b8;height:10mm}
-.wl.ansl{height:auto;min-height:10mm;line-height:10mm;color:var(--red);border-bottom:1.5px solid #94a3b8;white-space:pre-wrap;font-size:12pt}
-.gridp{display:grid;grid-template-columns:repeat(var(--gc,17),10mm);justify-content:center;margin:2mm 0 0;border-top:1.5px solid #cbd5e1;border-left:1.5px solid #cbd5e1}
-.gridp i{width:10mm;height:10mm;border-right:1.5px solid #cbd5e1;border-bottom:1.5px solid #cbd5e1}
-.gridp i:nth-child(5n){border-right-color:#cbd5e1}
-.pmodel{margin-top:2mm;font-size:10.5pt;color:#166534;background:#f0fdf4;border-radius:6px;padding:0 3mm}
-.pcards{display:flex;flex-wrap:wrap;gap:2mm;margin:1mm 0 2mm}
-.pcards span{border:1.5px solid #f9a8d4;background:#fff7fb;border-radius:8px;padding:0 3mm;line-height:9mm;font-size:12pt}
-.pcards span em{font-style:normal;font-weight:700;color:#be185d;margin-right:1.5mm}
-.psort{display:flex;flex-wrap:wrap;align-items:center;gap:2mm}
-.psort .sb{position:relative;border:1.5px solid #ec4899;border-radius:8px;min-width:24mm;height:12mm;display:inline-flex;align-items:center;justify-content:center;padding:0 2mm;font-size:12pt;color:var(--red)}
-.psort .sb.wide{min-width:52mm}
-.psort .sb sup{position:absolute;top:-2.2mm;left:-2.2mm;width:5mm;height:5mm;border-radius:50%;background:#ec4899;color:#fff;font-size:8pt;line-height:5mm;text-align:center}
-.psort .ar{color:#94a3b8}
-.ppart{display:grid;grid-template-columns:17mm 1fr;gap:3mm;margin-top:2mm}
-.ppart .pl{border-radius:8px;background:var(--lt);border:1.5px solid var(--lc);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:13pt}
-.ppart .st{color:#4338ca;font-size:12pt;line-height:10mm;border-bottom:1.5px solid #94a3b8}
-.pck{display:flex;flex-wrap:wrap;gap:2mm 6mm;font-size:12pt;margin-top:3mm;align-items:center}
-.pck span::before,.pfoot span::before{content:"☐";font-size:14pt;margin-right:1mm}
-.pfoot{display:flex;gap:6mm;flex-wrap:wrap;align-items:center;font-size:12pt;border-top:1.5px dashed #94a3b8;padding-top:2mm;margin-top:2mm;break-inside:avoid}
-.ans .bl,.ans .tv{color:var(--red)}
-.tsec{font-size:11pt}
-.tsec h2{margin:0 0 2mm;font-size:18pt;text-align:center}
-.tsec h3{font-size:13pt;margin:4mm 0 1.5mm;border-left:5px solid #334155;padding-left:8px}
-.tsec table{border-collapse:collapse;width:100%;font-size:10.5pt}
-.tsec th,.tsec td{border:1px solid #94a3b8;padding:4px 6px;text-align:left;vertical-align:top}
-.tsec th{background:#f1f5f9;white-space:nowrap}
-.tsec ul{margin:2px 0;padding-left:1.3em;font-size:10.5pt}
-.tv{white-space:pre-wrap}
-body.bpmf .pmat,body.bpmf .pc,body.bpmf .plh .q{line-height:2.1}
-@page{size:A4;margin:11mm 12mm}
-@media print{
-  body,body.paper{background:#fff}
-  .sheetwrap{width:auto}
-  .pg{margin:0;padding:0;width:auto;box-shadow:none;page-break-after:always;min-height:auto}
-  .pg:last-child{page-break-after:auto}
-  .bar,.menu,.toast,#rec{display:none !important}
-  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-}
-@media (max-width:640px){
-  .field{grid-template-columns:1fr}
-  .bar .ttl{max-width:100%;flex-basis:100%}
-  .bar .row{gap:6px;padding:6px 8px}.big{padding:6px 10px;min-height:42px}
-  .blocks{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding:4px 8px 8px}.blk{white-space:nowrap;flex:none}
-  .card{padding:16px 14px}.lvh{margin:-16px -14px 14px;padding:12px 14px}
-}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Iansui,"芫荽","標楷體",serif;line-height:1.75}
+main{max-width:1000px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:2rem;margin:.2em 0}
+h2{font-size:1.4rem;margin:2em 0 .6em;border-left:6px solid var(--acc);padding-left:10px}
+h3{margin:.2em 0 .4em;font-size:1.15rem}
+p.lead{color:var(--sub);font-size:1.08rem;margin:.3em 0 1em}
+a{color:var(--acc)}
+.hero-btns{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.btn{display:inline-block;text-decoration:none;border-radius:10px;padding:10px 18px;border:2px solid var(--acc);color:var(--acc);font-size:1rem;background:var(--card)}
+.btn.main{background:var(--acc);color:#fff}
+.levels{display:flex;flex-wrap:wrap;gap:6px;padding:0;margin:0;list-style:none}
+.levels li{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.95rem}
+.levels b{color:var(--acc)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:-1px}
+.tabs button{font:inherit;cursor:pointer;border:1px solid var(--line);border-bottom:0;background:var(--bg);color:var(--sub);border-radius:10px 10px 0 0;padding:8px 14px}
+.tabs button.on{background:var(--card);color:var(--ink);font-weight:700;border-color:var(--line)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:0 12px 12px 12px;padding:16px 20px;display:none}
+.panel.on{display:block}
+.panel ol{padding-left:1.4em;margin:.4em 0}
+.panel li{margin:.35em 0}
+.tip{background:var(--soft);border-radius:10px;padding:8px 14px;margin:10px 0;font-size:.95rem}
+pre{font-family:ui-monospace,Consolas,monospace;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:.4em 0;overflow-x:auto;white-space:pre-wrap;word-break:break-all;position:relative}
+.copy{font:inherit;font-size:.85rem;cursor:pointer;border:1px solid var(--acc);color:var(--acc);background:var(--card);border-radius:8px;padding:2px 10px;margin-left:6px}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--bg);font-family:inherit}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.card img{width:100%;height:220px;object-fit:cover;object-position:top;display:block;border-bottom:1px solid var(--line);background:#fff}
+.card .b{padding:10px 14px}
+.card p{margin:.2em 0;color:var(--sub);font-size:.95rem}
+.files{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.files a{font-size:.9rem;text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:2px 10px}
+table{border-collapse:collapse;width:100%;background:var(--card);font-size:.95rem}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft)}
+footer{margin-top:40px;color:var(--sub);font-size:.9rem}
+@media(max-width:600px){h1{font-size:1.6rem}.panel{padding:12px 14px}}
 </style>
 </head>
 <body>
-<div id="app"></div>
-<div class="toast" id="toast"></div>
+<main>
+  <h1>✏️ 六何法分層寫作小幫手</h1>
+  <p class="lead">給 AI 一個作文題目或寫作素材，就依「六何法」七個層次，一層一層引導學生從一句話寫到一篇文章。可以選要做哪幾層、替不同學生調整提示量，產出互動網頁、可直接書寫的學習單（PDF、可編輯 Word）與教師版。Claude、ChatGPT、Gemini 都能用。</p>
+  <ul class="levels">
+    <li><b>1</b> 三何起步</li><li><b>2</b> 五何擴寫</li><li><b>3</b> 六何完整</li><li><b>4</b> 事件排序</li><li><b>5</b> 情緒加料</li><li><b>6</b> 三段成文</li><li><b>7</b> 完整寫作</li><li><b>8</b> 遷移寫作與自我檢核</li>
+  </ul>
+  <div class="hero-btns">
+    <a class="btn main" href="#install">開始安裝</a>
+    <a class="btn" href="six-w-writing.zip" download>⬇ 下載 Claude 安裝檔（zip）</a>
+    <a class="btn" href="maker.html">線上製作頁</a>
+  </div>
 
-<script id="lesson" type="application/json">/*__LESSON__*/<\/script>
+  <h2 id="install">安裝教學</h2>
+  <p>先選你用的 AI：</p>
+  <div class="tabs" role="tablist">
+    <button class="on" data-t="quick">最快：一句話</button>
+    <button data-t="claude">Claude</button>
+    <button data-t="gpt">ChatGPT</button>
+    <button data-t="gemini">Gemini</button>
+    <button data-t="code">Claude Code</button>
+  </div>
+
+  <section class="panel on" id="p-quick">
+    <h3>不用安裝，這次對話馬上用</h3>
+    <ol>
+      <li>打開 Claude、ChatGPT 或 Gemini，開一個新對話。</li>
+      <li>把下面兩行貼進對話框送出：<button class="copy" data-c="c1">複製</button>
+        <pre id="c1">安裝skill
+https://github.com/sesns365/six-w-writing</pre></li>
+      <li>AI 回覆「已啟用」後，接著說題目，例如「六何法分層寫作，題目〈我的第一次〉，四年級」。</li>
+    </ol>
+    <div class="tip">這只對「這一次對話」有效，開新對話要再貼一次。想每次都能用，請看其他分頁的正式安裝。</div>
+    <div class="tip">Gemini 常讀不到 GitHub 網址，讀不到時改貼：<button class="copy" data-c="c2">複製</button>
+      <pre id="c2">安裝skill
+https://raw.githubusercontent.com/sesns365/six-w-writing/main/gpt-gemini/instructions.md</pre></div>
+  </section>
+
+  <section class="panel" id="p-claude">
+    <h3>Claude（網頁版、桌面 App）</h3>
+    <ol>
+      <li>下載安裝檔：<a href="six-w-writing.zip" download>six-w-writing.zip</a>（不用解壓縮）。</li>
+      <li>打開 Claude，點左下角自己的名字 →「<b>設定</b>」→「<b>功能</b>（Capabilities）」。</li>
+      <li>確認「<b>程式碼執行與檔案建立</b>」已開啟。</li>
+      <li>往下找到「<b>技能</b>（Skills）」→「<b>上傳技能</b>」，選剛剛下載的 zip。</li>
+      <li>看到「六何法分層寫作小幫手」並且是開啟狀態，就完成了。</li>
+      <li>開新對話，直接說「六何法分層寫作，題目是……」，技能會自動啟用。</li>
+    </ol>
+    <div class="tip">Claude 可以直接產生互動網頁、學習單 PDF、可編輯 Word 與教師版。</div>
+  </section>
+
+  <section class="panel" id="p-gpt">
+    <h3>ChatGPT（建立自己的 GPT）</h3>
+    <ol>
+      <li>到 <a href="https://github.com/sesns365/six-w-writing/blob/main/gpt-gemini/instructions.md">gpt-gemini/instructions.md</a>，按右上角的「複製」圖示，複製全文。</li>
+      <li>在 ChatGPT 左側點「<b>GPT</b>」→「<b>建立</b>」→ 切到「<b>設定</b>（Configure）」。</li>
+      <li>名稱填「六何法分層寫作小幫手」，把剛剛複製的內容貼到「<b>指示</b>（Instructions）」。</li>
+      <li>「<b>知識</b>」上傳 <a href="https://github.com/sesns365/six-w-writing/raw/main/six-w-writing/references/example-lesson.json">example-lesson.json</a>（範例）。</li>
+      <li>按「建立」儲存，之後從左側點這個 GPT 就能用。</li>
+    </ol>
+    <div class="tip">ChatGPT 會給你一段 lesson.json，請複製後貼到 <a href="maker.html">線上製作頁</a>，就能預覽、下載互動網頁，學習單按「列印／存 PDF」。</div>
+  </section>
+
+  <section class="panel" id="p-gemini">
+    <h3>Gemini（技能 Skills）</h3>
+    <ol>
+      <li>下載 <a href="six-w-writing.zip" download>six-w-writing.zip</a> 並<b>解壓縮</b>，會得到 <code>six-w-writing</code> 資料夾（名稱不要改）。</li>
+      <li>用電腦開 Gemini 網頁版（或 Mac App），點「<b>自訂</b>」→「<b>技能</b>（Skills）」→「<b>匯入</b>」。</li>
+      <li>選取整個 <code>six-w-writing</code> 資料夾。</li>
+      <li>對話中輸入 <kbd>/six-w-writing</kbd>，或直接說「六何法分層寫作，題目是……」。</li>
+    </ol>
+    <div class="tip">Gemini 會給你一段 lesson.json，請貼到 <a href="maker.html">線上製作頁</a> 下載成品。不想安裝，也可以把 <a href="https://github.com/sesns365/six-w-writing/blob/main/gpt-gemini/instructions.md">instructions.md</a> 全文貼在對話開頭。</div>
+  </section>
+
+  <section class="panel" id="p-code">
+    <h3>Claude Code</h3>
+    <ol>
+      <li>把 <code>six-w-writing</code> 資料夾放到 <code>~/.claude/skills/</code>（Windows：<code>C:\Users\你的帳號\.claude\skills\</code>）。</li>
+      <li>需要時安裝套件：<button class="copy" data-c="c3">複製</button><pre id="c3">pip install python-docx playwright</pre></li>
+      <li>開 Claude Code，說「六何法分層寫作，題目是……」，會自動執行 <code>scripts/build.py</code> 產出全部檔案。</li>
+    </ol>
+  </section>
+
+  <h2>怎麼跟 AI 說</h2>
+  <pre>六何法分層寫作，題目〈我的第一次〉，四年級。
+小明會說不會寫，只做 1–3 層，提示多；其他同學做通用版。</pre>
+  <pre>這是課文（貼上），做六何法分層寫作，第 4–7 層就好，提示少，用標楷。</pre>
+  <pre>用這張校外教學的照片做六何法寫作學習單，二年級，要注音。</pre>
+  <table>
+    <tr><th>可以指定</th><th>說法範例</th></tr>
+    <tr><td>層次</td><td>「只做 1–3 層」「第 4–7 層」，沒說就全部</td></tr>
+    <tr><td>提示量</td><td>「提示多／中／少」，或描述學生：「會說不會寫」「注意力短」</td></tr>
+    <tr><td>字型</td><td>「芫荽」（預設）、「用標楷」、「要注音」</td></tr>
+    <tr><td>多個版本</td><td>「小明一份、其他人一份」，每個版本各一份學習單</td></tr>
+  </table>
+
+  <h2>範例：〈小安學騎腳踏車〉</h2>
+  <div class="grid">
+    <div class="card"><a href="範例/小安學騎腳踏車_互動網頁.html"><img src="docs/screenshots/level2.png" alt="互動網頁" loading="lazy"></a><div class="b"><h3>互動網頁</h3><p>一層一層寫，答案自動帶入下一層；報讀、語音輸入、對答案。</p><div class="files"><a href="範例/小安學騎腳踏車_互動網頁.html">打開試用</a></div></div></div>
+    <div class="card"><a href="範例/小安學騎腳踏車_學習單_通用版.pdf"><img src="docs/screenshots/sheet.png" alt="學習單" loading="lazy"></a><div class="b"><h3>學習單</h3><p>只有題目和作答空間，書寫線 10mm、方格稿紙。</p><div class="files"><a href="範例/小安學騎腳踏車_學習單_通用版.pdf">通用版 PDF</a><a href="範例/小安學騎腳踏車_學習單_通用版.docx">Word</a><a href="範例/小安學騎腳踏車_學習單_提示多版_注音.pdf">注音版</a></div></div></div>
+    <div class="card"><a href="範例/小安學騎腳踏車_教師版.pdf"><img src="docs/screenshots/teacher.png" alt="教師版" loading="lazy"></a><div class="b"><h3>教師版</h3><p>紅字答案、選層建議、課程調整四面向。</p><div class="files"><a href="範例/小安學騎腳踏車_教師版.pdf">PDF</a><a href="範例/小安學騎腳踏車_教師版.docx">Word</a></div></div></div>
+  </div>
+
+  <footer>由特工365 整理。改編自：<a href="https://courses.dale.nthu.edu.tw/repo/14342">https://courses.dale.nthu.edu.tw/repo/14342</a>（閱讀理解策略應用與實作社群「閱讀延伸寫作策略：六何法分層寫作教材」）｜<a href="https://github.com/sesns365/six-w-writing">GitHub</a></footer>
+</main>
 <script>
-"use strict";
-const L = JSON.parse(document.getElementById('lesson').textContent);
-const MODE = L.__mode || 'web';          // web｜sheet｜teacher
-const VER  = L.__version || 0;           // sheet 模式要印哪個版本
-const LV = {
-  1:{name:'三何起步',sub:'何人＋何地＋何事',focus:'組成清楚的基本句'},
-  2:{name:'五何擴寫',sub:'加入何時＋如何',focus:'補充時間與動作'},
-  3:{name:'六何完整',sub:'加入兩層「為何」',focus:'理解衝突與人物改變'},
-  4:{name:'事件排序',sub:'排列事件＋連接詞',focus:'建立敘事順序'},
-  5:{name:'情緒加料',sub:'動作＋想法＋感受',focus:'描寫人物心情轉折'},
-  6:{name:'三段成文',sub:'開始＋經過＋結果',focus:'完成三段式重述'},
-  7:{name:'完整寫作',sub:'整合成一篇文章',focus:'整合所學，完成文章'},
-  8:{name:'遷移寫作與自我檢核',sub:'連結自己的經驗',focus:'用到生活中、檢查自己的文章'}
-};
-const SUPS = {choices:'圈選',bank:'提示詞／詞庫',frame:'句型',cards:'事件卡',model:'範例',speak:'先說再寫（語音輸入）'};
-const PRESET = {'多':['choices','bank','frame','cards','model','speak'],'中':['bank','frame','cards','speak'],'少':['speak']};
-const CHECK4 = [['內容完整','交代人物、時間、地點與主要事件'],['組織清楚','依序敘述，說明原因與方法'],['描寫具體','加入人物心情、想法或發現'],['自主修訂','檢查標點與錯字']];
-const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const $ = (s,r=document)=>r.querySelector(s);
-const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
-const versions = (L.versions && L.versions.length) ? L.versions : [{name:'通用版',levels:Object.keys(L.levels).map(Number),support:'中'}];
-function supList(v){ return v.supports || PRESET[v.support||'中'] || PRESET['中']; }
-function lvls(v){ return (v.levels||[]).map(Number).filter(n=>L.levels[n]); }
-// 所有欄位：key → {label, ans}
-const FIELDS = {};
-Object.entries(L.levels).forEach(([n,lv])=>(lv.fields||[]).forEach(f=>{ if(!FIELDS[f.key]) FIELDS[f.key]=f; }));
-function color(n){ return `var(--c${n})`; }
-function tint(n){ return `var(--t${n})`; }
-
-/* =====================================================================
-   學習單（sheet／teacher）
-   ===================================================================== */
-function disp(f){ if(!f) return ''; if(f.show) return f.show; const a=f.ans||[]; const c=(f.choices||[]).find(x=>a.some(k=>k&&x.includes(k))); return c||a[0]||''; }
-function shuffled(arr, seed){ // 固定亂數，學習單與網頁一致；保證不是原順序
-  const a = arr.map((x,i)=>[x,i]); let s=seed||7;
-  for(let i=a.length-1;i>0;i--){ s=(s*9301+49297)%233280; const j=Math.floor(s/233280*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-  if(a.length>1 && a.every((x,i)=>x[1]===i)) a.push(a.shift());
-  return a.map(x=>x[0]);
-}
-function matHTML(cls){
-  const m = L.material||{}; let h='';
-  if(m.image) h += `<div style="text-align:center"><img src="${esc(m.image)}" alt="${esc(m.imageAlt||'素材圖片')}" style="max-height:60mm"></div>`;
-  if(m.text && m.text.length) h += m.text.map(p=>`<p>${esc(p)}</p>`).join('');
-  return h;
-}
-function fillFrame(fr, ans){ // 句型 → 空格（教師版填紅字）
-  return esc(fr).replace(/\{(\w+)\}/g,(m,k)=>{
-    const f=FIELDS[k]; const lab=f?f.label.replace(/[（(].*$/,''):k;
-    const v = ans && disp(f);
-    return v ? `<span class="bl in">${esc(v)}</span>` : `<span class="bl in"><small>${esc(lab)}</small></span>`;
-  });
-}
-function lines(n, val){
-  if(val) return String(val).split('\n').map(t=>`<div class="wl ansl">${esc(t)}</div>`).join('');
-  let h=''; for(let i=0;i<n;i++) h+='<div class="wl"></div>'; return h;
-}
-function gridPaper(rows){ let h=''; for(let i=0;i<rows*17;i++) h+='<i></i>'; return `<div class="gridp">${h}</div>`; }
-function bankHTML(name, list){ return `<div class="pbank"><b>${esc(name)}</b>${list.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`; }
-function sheetLevel(n, lv, sup, ans){
-  const has = k=>sup.includes(k);
-  const type = lv.type || ({4:'sort',6:'parts',7:'essay',8:'transfer'}[n]) || 'fields';
-  let c = '';
-  if(type==='fields' || type==='transfer'){
-    if(lv.prompt) c += `<div style="font-weight:700;margin-bottom:1mm">${esc(lv.prompt)}</div>`;
-    const fs = lv.fields||[];
-    if(fs.length){
-      c += '<div class="pf">';
-      fs.forEach(f=>{
-        const opts = has('choices') && f.choices && f.choices.length;
-        const long = opts || disp(f).length>8 || /為何|原因|如何/.test(f.label) || type==='transfer';
-        c += `<div class="it${long?' wide':''}"><b>${esc(f.label)}</b>`;
-        c += opts ? `<span class="op">${f.choices.map(x=>`<span class="${ans&&x===disp(f)?'ok':''}">${esc(x)}</span>`).join('')}</span>`
-                  : `<span class="bl">${ans?esc(disp(f)):''}</span>`;
-        c += '</div>';
-      });
-      c += '</div>';
-      if(has('bank')) fs.filter(f=>f.bank&&f.bank.length).forEach(f=> c += bankHTML(f.bankName||(f.label+'提示詞'), f.bank));
-    }
-    if(has('bank') && lv.bank && lv.bank.length) c += bankHTML(lv.bankName||'提示詞', lv.bank);
-    if(has('frame') && lv.frame) c += `<div class="pframe"><b>句型</b>${fillFrame(lv.frame, ans)}</div>`;
-    if(lv.sentence!==false) c += `<div class="wlab">✏️ ${esc(lv.sentenceLabel||'寫成完整的句子')}</div>` + lines(lv.lines||2, ans?lv.model:'');
-    if(type==='transfer') c += `<div class="pck"><b>我會檢查：</b>${(lv.checks||CHECK4.map(x=>x[0])).map(x=>`<span>${esc(x)}</span>`).join('')}</div>`;
-  } else if(type==='sort'){
-    const ev = lv.events||[]; const L8='ABCDEFGH';
-    if(has('cards')){
-      const sh = shuffled(ev, 7);
-      c += `<div class="pcards">${sh.map((e,i)=>`<span><em>${L8[i]}</em>${esc(e)}</span>`).join('')}</div>`;
-      c += `<div class="psort">${ev.map((e,i)=>`<span class="sb"><sup>${i+1}</sup>${ans?L8[sh.indexOf(e)]:''}</span>${i<ev.length-1?'<span class="ar">➜</span>':''}`).join('')}</div>`;
-    } else {
-      c += `<div class="psort">${ev.map((e,i)=>`<span class="sb wide"><sup>${i+1}</sup>${ans?esc(e):''}</span>${i<ev.length-1?'<span class="ar">➜</span>':''}`).join('')}</div>`;
-    }
-    if(has('bank') && lv.connectors) c += bankHTML('連接詞', lv.connectors);
-    if(has('frame') && lv.frame) c += `<div class="pframe"><b>句型</b>${esc(lv.frame)}</div>`;
-    c += `<div class="wlab">✏️ ${esc(lv.sentenceLabel||'用連接詞串成一段話')}</div>` + lines(lv.lines||3, ans?lv.model:'');
-  } else if(type==='parts'){
-    (lv.parts||[]).forEach(p=>{
-      const ln = p.lines||2;
-      c += `<div class="ppart"><div class="pl">${esc(p.label)}</div><div>${has('frame')&&p.starter&&!ans?`<div class="st">${esc(p.starter)}</div>`+lines(ln-1):lines(ln, ans?p.model:'')}</div></div>`;
-    });
-    if(has('bank') && lv.bank) c += bankHTML(lv.bankName||'提示詞', lv.bank);
-  } else if(type==='essay'){
-    if(lv.prompt) c += `<div style="font-weight:700">題目：${esc(lv.prompt)}${lv.words?`<span style="font-weight:400">（約 ${esc(lv.words)} 字）</span>`:''}</div>`;
-    if(has('frame') && lv.starter) c += `<div class="pframe"><b>開頭</b>${esc(lv.starter)}……</div>`;
-    if(has('bank') && lv.bank) c += bankHTML(lv.bankName||'好用詞語', lv.bank);
-    if(ans) c += `<div class="wlab">範文</div>` + lines(0, lv.model);
-    else { const w=+(String(lv.words||'').match(/\d+/g)||[0]).pop()||0; const rows = lv.rows || (w ? Math.ceil(w*1.1/17)+1 : (lv.lines||10)); c += gridPaper(rows); }
-  }
-  if(has('model') && lv.model && !ans && type!=='essay' && type!=='parts') c += `<div class="pmodel">範例：${esc(lv.model)}</div>`;
-  const q = (type==='essay'||!lv.guide) ? '' : lv.guide;
-  return `<div class="plv" style="--lc:${color(n)};--lt:${tint(n)}"><div class="plh"><span class="n">${n}</span><b>${esc(lv.name||LV[n].name)}</b><span class="q">${esc(q)}</span></div><div class="pc">${c}</div></div>`;
-}
-function renderSheet(teacher){
-  document.body.classList.add('paper');
-  const vs = teacher ? versions : [versions[VER]||versions[0]];
-  const topic = L.mode==='topic';
-  let out = '<div class="sheetwrap">';
-  vs.forEach(v=>{
-    const sup = supList(v);
-    out += `<div class="pg${teacher?' ans':''}">`;
-    out += `<div class="phead"><div class="pb">六何法<b>寫作</b></div><div class="ptt"><h1>${esc(L.title)}</h1><span class="ver">${esc(v.name)}${teacher?'・教師版':''}</span></div></div>`;
-    out += `<div class="pname"><span>班級<i></i></span><span>座號<i class="s"></i></span><span>姓名<i class="w"></i></span><span>日期<i class="s"></i>月<i class="s"></i>日</span></div>`;
-    if(teacher){
-      if(L.core) out += `<div class="pteach"><b>${topic?'寫作重點':'素材核心'}：</b>${esc(L.core)}</div>`;
-      if(L.goals && L.goals.length) out += `<div class="pteach"><b>學習目標：</b>${L.goals.map((g,i)=>`${i+1}. ${esc(g)}`).join('　')}</div>`;
-    }
-    const mh = matHTML();
-    if(mh && v.showMaterial!==false) out += `<div class="pmat"><div class="mh">${topic?'✏️ 寫作素材':'📖 讀一讀'}：${esc((L.material||{}).name||L.title)}</div>${mh}</div>`;
-    lvls(v).forEach(n=> out += sheetLevel(n, L.levels[n], sup, teacher));
-    out += `<div class="pfoot"><b>我完成了：</b>${CHECK4.map(x=>`<span>${x[0]}</span>`).join('')}</div>`;
-    out += '</div>';
-  });
-  if(teacher){
-    const t = L.teacher||{};
-    out += '<div class="pg tsec">';
-    out += `<h2>教學說明（教師用）</h2><div style="text-align:center;color:#475569">${esc(L.title)}${L.grade?'｜'+esc(L.grade):''}</div>`;
-    out += '<h3>版本與學習支持</h3><table><tr><th>版本</th><th>層次</th><th>學習支持</th><th>適用學生</th></tr>';
-    versions.forEach(v=> out += `<tr><td>${esc(v.name)}</td><td>${lvls(v).map(n=>n+' '+LV[n].name).join('、')}</td><td>${supList(v).map(s=>SUPS[s]).join('、')}</td><td>${esc(v.for||'')}</td></tr>`);
-    out += '</table>';
-    out += '<h3>選層建議（可跨層搭配，不必每次完成全部）</h3><table><tr><th>學習需要</th><th>建議層次</th><th>教學重點</th></tr><tr><td>基本句與原因表達</td><td>第 1–3 層</td><td>圈選、口說與句型提示</td></tr><tr><td>敘事組織與描寫</td><td>第 4–6 層</td><td>事件排序、心情與段落</td></tr><tr><td>完整文章整合</td><td>第 7 層（＋第 8 層遷移）</td><td>整合前面所學，完成重述或寫作</td></tr></table>';
-    out += `<h3>各層學習重點</h3><table>${Object.keys(L.levels).map(Number).sort((a,b)=>a-b).map(n=>`<tr><th>${n} ${LV[n].name}</th><td>${LV[n].sub}｜${LV[n].focus}${L.levels[n].guide?'<br>引導語：'+esc(L.levels[n].guide):''}</td></tr>`).join('')}</table>`;
-    if(t.tips && t.tips.length) out += `<h3>教學提示</h3><ul>${t.tips.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
-    const adj = t.adjust || {};
-    if(Object.keys(adj).length){ out += '<h3>課程調整四面向（可貼入 IEP 或教學紀錄）</h3><table>'; ['學習內容','學習歷程','學習環境','學習評量'].forEach(k=>{ if(adj[k]) out += `<tr><th>${k}</th><td>${esc(adj[k])}</td></tr>`; }); out += '</table>'; }
-    out += `<h3>學習檢核重點</h3><table>${CHECK4.map(x=>`<tr><th>${x[0]}</th><td>${x[1]}</td></tr>`).join('')}</table>`;
-    out += '<p style="font-size:10pt;color:#475569">教師調整原則：依學生當次表現調整提示量，逐步減少提示，支持獨立書寫。</p>';
-    if(L.source) out += `<p style="font-size:9.5pt;color:#64748b">${esc(L.source)}</p>`;
-    out += '</div>';
-  }
-  out += '</div>';
-  $('#app').innerHTML = out;
-  document.title = `${L.title}｜六何寫作學習單${teacher?'（教師版）':'（'+(versions[VER]||versions[0]).name+'）'}`;
-}
-
-/* =====================================================================
-   互動網頁（web）
-   ===================================================================== */
-const KEY = 'sixw:'+(L.title||'')+':';
-let S = {v:null, step:0, a:{}, order:{}, done:{}, sup:null};
-// 每個版本各存一份作答（同一台平板不同學生用不同版本也不會混在一起）
-function blank(){ return {step:0, a:{}, order:{}, done:{}, sup:null}; }
-function loadV(v){ let d=null; try{ d=JSON.parse(localStorage.getItem(KEY+'v'+v)||'null'); }catch(e){} S=Object.assign({v}, blank(), d||{}); }
-let loaded=false;
-function load(){ if(loaded) return; loaded=true; let v=null; try{ v=localStorage.getItem(KEY+'cur'); }catch(e){} if(v!==null && versions[+v]) loadV(+v); }
-function save(){ try{ localStorage.setItem(KEY+'cur', S.v); const {v,...d}=S; localStorage.setItem(KEY+'v'+S.v, JSON.stringify(d)); }catch(e){} }
-function V(){ return versions[S.v]; }
-function on(k){ return (S.sup||supList(V())).includes(k); }
-function steps(){ const a=[]; if(matHTML()) a.push('mat'); lvls(V()).forEach(n=>a.push(n)); return a; }
-function toast(t){ const el=$('#toast'); el.textContent=t; el.style.display='block'; clearTimeout(toast.t); toast.t=setTimeout(()=>el.style.display='none',2200); }
-
-function renderWeb(){
-  load();
-  if(S.v==null || !versions[S.v]){
-    if(versions.length===1){ loadV(0); } else { return renderPick(); }
-  }
-  const st = steps(); if(S.step>=st.length) S.step=0;
-  const cur = st[S.step];
-  let h = `<div class="bar"><div class="row"><div class="ttl">✏️ ${esc(L.title)}｜${esc(V().name)}</div>
-    <button class="big" onclick="go(-1)" ${S.step===0?'disabled':''}>⬅ 上一步</button>
-    <button class="big" onclick="readStep()">🔊 唸給我聽</button>
-    <button class="big ok" onclick="checkStep()">✔ 對答案</button>
-    <button class="big go" onclick="go(1)" ${S.step===st.length-1?'disabled':''}>下一步 ➡</button>
-    <button class="big" onclick="fsz(-1)" title="字變小">A−</button><button class="big" onclick="fsz(1)" title="字變大">A＋</button>
-    <button class="big" onclick="menu(true)">☰ 更多</button></div>
-    <div class="blocks">${st.map((s,i)=>`<span class="blk ${i===S.step?'cur':''} ${S.done[s]?'done':''}" onclick="jump(${i})"><b>${s==='mat'?'📖':s}</b>${s==='mat'?(L.mode==='topic'?'題目':'素材'):LV[s].name}</span>`).join('')}</div></div>`;
-  h += '<div class="wrap">';
-  h += cur==='mat' ? webMat() : webLevel(cur, L.levels[cur]);
-  h += `<div class="navb"><button class="big" onclick="go(-1)" ${S.step===0?'disabled':''}>⬅ 上一步</button><button class="big go" onclick="${S.step===st.length-1?'showRec()':'go(1)'}">${S.step===st.length-1?'📋 完成，看作答紀錄':'下一步 ➡'}</button></div>`;
-  h += '</div>';
-  h += menuHTML() + `<div id="rec"><div class="rb"><h3 style="margin-top:0">作答紀錄</h3><label>姓名：<input class="t" id="recName" style="max-width:240px;display:inline-block" oninput="buildRec()"></label><pre id="recText"></pre><button class="big" onclick="copyRec()">複製文字</button> <button class="big" onclick="printRec()">列印</button> <button class="big" onclick="$('#rec').classList.remove('show')">關閉</button></div></div>`;
-  $('#app').innerHTML = h;
-  document.title = `${L.title}｜六何法分層寫作`;
-  bind();
-}
-function renderPick(){
-  $('#app').innerHTML = `<div class="pick card"><h2>✏️ ${esc(L.title)}</h2><p>請選擇你的學習單：</p>${versions.map((v,i)=>`<button class="big ${i?'':'go'}" onclick="pickV(${i})">${esc(v.name)}${v.for?`<br><small>${esc(v.for)}</small>`:''}</button>`).join('')}</div>`;
-}
-function pickV(i){ if(S.v!=null) save(); loadV(i); save(); renderWeb(); }
-function webMat(){
-  const m=L.material||{};
-  return `<div class="card" style="--lc:#0ea5e9"><div class="lvh" style="background:#0ea5e9"><div class="num">📖</div><h2>${L.mode==='topic'?'寫作題目與素材':'先讀一讀'}<small>${esc(m.name||L.title)}</small></h2><button class="say" onclick="sayEl(this.closest('.card'))">🔊</button></div>
-  ${L.core?`<div class="guide"><p><b>${L.mode==='topic'?'寫作重點':'素材核心'}：</b>${esc(L.core)}</p></div>`:''}
-  <div class="mat" data-read>${matHTML()}</div>
-  ${L.goals?`<div class="box frame"><div class="bh">今天的學習目標</div>${L.goals.map((g,i)=>`<div>${i+1}. ${esc(g)}</div>`).join('')}</div>`:''}</div>`;
-}
-function inp(key, ph, big){
-  const v = esc(S.a[key]||'');
-  const mic = on('speak') && SR ? `<button class="mic" data-mic="${key}" title="用說的">🎤</button>` : '';
-  return big ? `<div class="inrow"><textarea class="t" data-k="${key}" rows="${big}" placeholder="${esc(ph||'')}">${v}</textarea>${mic}</div>`
-             : `<div class="inrow"><input class="t" data-k="${key}" value="${v}" placeholder="${esc(ph||'')}">${mic}</div>`;
-}
-function chipRow(list, target, cls){ return `<div class="chips">${list.map(x=>`<button class="chip ${cls||''}" data-ins="${esc(x)}" ${target?`data-to="${target}"`:''}>${esc(x)}</button>`).join('')}</div>`; }
-function frameLive(fr){
-  return esc(fr).replace(/\{(\w+)\}/g,(m,k)=>{ const v=S.a[k]; const f=FIELDS[k]; return `<span class="fv ${v?'':'empty'}" data-fv="${k}">${v?esc(v):esc(f?f.label.replace(/[（(].*$/,''):k)}</span>`; });
-}
-function webLevel(n, lv){
-  const info = LV[n]; const type = lv.type || ({4:'sort',6:'parts',7:'essay',8:'transfer'}[n]) || 'fields';
-  let h = `<div class="card lv" data-n="${n}" style="--lc:${color(n)}"><div class="lvh" style="background:${color(n)}"><div class="num">${n}</div><h2>${esc(lv.name||info.name)}<small>${esc(info.sub)}｜${esc(info.focus)}</small></h2><button class="say" onclick="readStep()">🔊</button></div>`;
-  if(lv.guide) h += `<div class="guide"><p data-read>${esc(lv.guide)}</p></div>`;
-  if(type==='fields' || type==='transfer'){
-    if(lv.prompt) h += `<div class="guide"><p data-read><b>${esc(lv.prompt)}</b></p></div>`;
-    (lv.fields||[]).forEach(f=>{
-      h += `<div class="field"><div class="lab" data-read>${esc(f.label)}${f.hint?`<small>${esc(f.hint)}</small>`:''}</div><div>${inp(f.key, f.ph||'寫在這裡')}`;
-      if(on('choices') && f.choices && f.choices.length) h += `<div class="chips">${f.choices.map(x=>`<button class="chip pick1 ${S.a[f.key]===x?'on':''}" data-set="${f.key}" data-val="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
-      if(on('bank') && f.bank && f.bank.length) h += `<div class="box bank"><div class="bh">${esc(f.bankName||'提示詞')}（點一下放進去）</div>${chipRow(f.bank, f.key)}</div>`;
-      h += `</div></div>`;
-    });
-    if(on('bank') && lv.bank && lv.bank.length) h += `<div class="box bank"><div class="bh">${esc(lv.bankName||'提示詞')}（點一下放進游標所在的格子）</div>${chipRow(lv.bank)}</div>`;
-    if(on('frame') && lv.frame) h += `<div class="box frame"><div class="bh">句型（會自動帶入你寫的答案）</div><div data-frame>${frameLive(lv.frame)}</div></div>`;
-    if(lv.sentence!==false) h += `<div class="sent"><div class="sl" data-read>${esc(lv.sentenceLabel||'把它寫成一句完整的話：')}${on('frame')&&lv.frame?` <button class="chip" data-copyframe="${n}">⬇ 帶入句型</button>`:''}</div>${inp('s'+n, '在這裡寫句子', lv.lines||2)}</div>`;
-    if(type==='transfer') h += `<div class="sent"><div class="sl">我會檢查自己的文章：</div><div class="checks">${(lv.checks||CHECK4.map(x=>x[0])).map((x,i)=>`<label><input type="checkbox" data-k="ck${n}_${i}" ${S.a['ck'+n+'_'+i]?'checked':''}> ${esc(x)}</label>`).join('')}</div></div>`;
-  } else if(type==='sort'){
-    const ev = lv.events||[]; const ord = S.order[n] || Array(ev.length).fill(null);
-    if(on('cards')){
-      const sh = shuffled(ev,7);
-      h += `<div class="sl" style="font-weight:700">點事件卡，依照先後放進格子（點格子可以拿回來）：</div><div class="sort">${sh.map(e=>`<button class="ecard ${ord.includes(e)?'used':''}" data-card="${esc(e)}">${esc(e)}</button>`).join('')}</div>`;
-      h += `<div class="sort">${ev.map((e,i)=>`<div class="slot ${ord[i]?'fill':''}" data-slot="${i}">${ord[i]?esc(ord[i]):(i+1)}</div>${i<ev.length-1?'<span class="arrow">➜</span>':''}`).join('')}</div>`;
-    } else {
-      h += `<div class="sl" style="font-weight:700">把事件依照先後寫下來：</div>` + ev.map((e,i)=>`<div class="field"><div class="lab">第 ${i+1} 件事</div><div>${inp('e'+n+'_'+i,'')}</div></div>`).join('');
-    }
-    if(on('bank') && lv.connectors) h += `<div class="box bank"><div class="bh">連接詞（點一下放進去）</div>${chipRow(lv.connectors)}</div>`;
-    if(on('frame') && lv.frame) h += `<div class="box frame"><div class="bh">句型</div><div>${esc(lv.frame)}</div></div>`;
-    h += `<div class="sent"><div class="sl" data-read>${esc(lv.sentenceLabel||'用連接詞把事件串成一段話：')}${on('cards')?` <button class="chip" data-chain="${n}">⬇ 帶入排好的事件</button>`:''}</div>${inp('s'+n,'首先……', lv.lines||4)}</div>`;
-  } else if(type==='parts'){
-    (lv.parts||[]).forEach(p=>{
-      h += `<div class="part"><h3 data-read>${esc(p.label)} <small>${esc(p.hint||'')}</small></h3>${on('frame')&&p.starter?`<div class="starter">可以這樣開頭：${esc(p.starter)}…… <button class="chip" data-start="${p.key}" data-text="${esc(p.starter)}">⬇ 帶入</button></div>`:''}${inp(p.key,'',3)}${on('model')&&p.model?`<details class="model"><summary>看範例</summary>${esc(p.model)}</details>`:''}</div>`;
-    });
-    if(on('bank') && lv.bank) h += `<div class="box bank"><div class="bh">${esc(lv.bankName||'提示詞')}</div>${chipRow(lv.bank)}</div>`;
-  } else if(type==='essay'){
-    if(lv.prompt) h += `<div class="guide"><p data-read><b>題目：${esc(lv.prompt)}</b>${lv.words?`（約 ${esc(lv.words)} 字）`:''}</p></div>`;
-    if(on('frame')){ const m = mats(n); if(m.length) h += `<div class="mats"><b>我的寫作材料（前面寫過的，可以直接用）</b><ol>${m.map(x=>`<li>${esc(x)}</li>`).join('')}</ol><button class="chip" data-mats="${n}">⬇ 全部帶入當草稿</button></div>`; }
-    if(on('frame') && lv.starter) h += `<div class="box frame"><div class="bh">開頭可以這樣寫</div>${esc(lv.starter)}…… <button class="chip" data-start="s${n}" data-text="${esc(lv.starter)}">⬇ 帶入</button></div>`;
-    if(on('bank') && lv.bank) h += `<div class="box bank"><div class="bh">${esc(lv.bankName||'好用詞語')}</div>${chipRow(lv.bank)}</div>`;
-    h += `<div class="sent">${inp('s'+n,'開始寫作……', 10)}<div class="cnt" data-cnt="s${n}"></div></div>`;
-    h += `<div class="sent"><div class="sl">寫完了，檢查一下：</div><div class="checks">${CHECK4.map((x,i)=>`<label title="${x[1]}"><input type="checkbox" data-k="ck${n}_${i}" ${S.a['ck'+n+'_'+i]?'checked':''}> ${x[0]}</label>`).join('')}</div></div>`;
-  }
-  if(on('model') && lv.model && type!=='parts') h += `<details class="model"><summary>看範例</summary><div style="white-space:pre-wrap">${esc(lv.model)}</div></details>`;
-  h += `<div class="fb" id="fb"></div></div>`;
-  return h;
-}
-function mats(n){
-  const out=[]; lvls(V()).filter(k=>k<n).forEach(k=>{
-    const lv=L.levels[k]; const type = lv.type || ({4:'sort',6:'parts',7:'essay',8:'transfer'}[k]) || 'fields';
-    if(type==='parts') (lv.parts||[]).forEach(p=>{ if(S.a[p.key]) out.push(p.label+'：'+S.a[p.key]); });
-    else if(S.a['s'+k]) out.push(S.a['s'+k]);
-  }); return out;
-}
-let lastInput = null;
-function bind(){
-  $$('[data-k]').forEach(el=>{
-    const k=el.dataset.k;
-    if(el.type==='checkbox'){ el.onchange=()=>{ S.a[k]=el.checked; save(); }; return; }
-    el.addEventListener('focus',()=>lastInput=el);
-    el.addEventListener('input',()=>{ S.a[k]=el.value; save(); el.classList.remove('good','try'); updFrames(); updCnt(); });
-  });
-  lastInput = $('[data-k]:not([type=checkbox])');
-  $$('[data-set]').forEach(b=>b.onclick=()=>{ const k=b.dataset.set; S.a[k]=b.dataset.val; save(); const el=$(`[data-k="${k}"]`); if(el) el.value=S.a[k]; $$(`[data-set="${k}"]`).forEach(x=>x.classList.toggle('on',x===b)); updFrames(); speak(b.dataset.val); });
-  $$('[data-ins]').forEach(b=>b.onclick=()=>{ const el = b.dataset.to ? $(`[data-k="${b.dataset.to}"]`) : lastInput; if(!el) return; insertAt(el, b.dataset.ins); speak(b.dataset.ins); });
-  $$('[data-copyframe]').forEach(b=>b.onclick=()=>{ const lv=L.levels[b.dataset.copyframe]; const t=lv.frame.replace(/\{(\w+)\}/g,(m,k)=>S.a[k]||'＿＿'); setVal('s'+b.dataset.copyframe, t); });
-  $$('[data-start]').forEach(b=>b.onclick=()=>{ const el=$(`[data-k="${b.dataset.start}"]`); if(el && !el.value.startsWith(b.dataset.text)) setVal(b.dataset.start, b.dataset.text + el.value); });
-  $$('[data-mats]').forEach(b=>b.onclick=()=>{ const k='s'+b.dataset.mats; const m=mats(+b.dataset.mats).map(x=>x.replace(/^(開始|經過|結果)[：:]/,'')).join('\n'); const el=$(`[data-k="${k}"]`); if(el.value && !confirm('要把材料加在你寫的內容後面嗎？')) return; setVal(k, (el.value?el.value+'\n':'')+m); });
-  $$('[data-card]').forEach(b=>b.onclick=()=>{ const n=+$('.lv').dataset.n; const ev=L.levels[n].events; const ord=S.order[n]||Array(ev.length).fill(null); const i=ord.indexOf(null); if(i<0) return; ord[i]=b.dataset.card; S.order[n]=ord; save(); speak(b.dataset.card); rerender(); });
-  $$('[data-slot]').forEach(b=>b.onclick=()=>{ const n=+$('.lv').dataset.n; const ord=S.order[n]; if(!ord) return; ord[+b.dataset.slot]=null; save(); rerender(); });
-  $$('[data-chain]').forEach(b=>b.onclick=()=>{ const n=+b.dataset.chain; const lv=L.levels[n]; const ord=(S.order[n]||[]).filter(Boolean); if(!ord.length) return toast('先把事件卡排好喔'); const cj=lv.connectors||['首先','接著','然後','最後']; const t=ord.map((e,i)=>(i===ord.length-1?cj[cj.length-1]:cj[Math.min(i,cj.length-2)])+'，'+e).join('；')+'。'; setVal('s'+n,t); });
-  $$('[data-mic]').forEach(b=>b.onclick=()=>listen(b));
-  updCnt();
-}
-function rerender(){ const y=scrollY; renderWeb(); scrollTo(0,y); }
-function setVal(k,t){ const el=$(`[data-k="${k}"]`); if(!el) return; el.value=t; S.a[k]=t; save(); updFrames(); updCnt(); el.focus(); }
-function insertAt(el, t){ const s=el.selectionStart??el.value.length, e=el.selectionEnd??el.value.length; el.value=el.value.slice(0,s)+t+el.value.slice(e); el.focus(); el.selectionStart=el.selectionEnd=s+t.length; el.dispatchEvent(new Event('input')); }
-function updFrames(){ $$('[data-fv]').forEach(x=>{ const v=S.a[x.dataset.fv]; x.classList.toggle('empty',!v); if(v) x.textContent=v; }); }
-function updCnt(){ $$('[data-cnt]').forEach(x=>{ const v=(S.a[x.dataset.cnt]||'').replace(/\s/g,''); x.textContent=`已寫 ${v.length} 字`; }); }
-function go(d){ stopTTS(); const st=steps(); const cur=st[S.step]; if(d>0 && cur!=='mat') S.done[cur]=true; S.step=Math.max(0,Math.min(st.length-1,S.step+d)); save(); renderWeb(); scrollTo(0,0); }
-function jump(i){ stopTTS(); S.step=i; save(); renderWeb(); scrollTo(0,0); }
-function fsz(d){ const v=Math.max(.8,Math.min(1.6,(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs'))||1)+d*.1)); document.documentElement.style.setProperty('--fs',v); try{localStorage.setItem(KEY+'fs',v);}catch(e){} }
-
-/* ---- 對答案：有標準答案的比對關鍵詞；開放題給檢查提示，不打分數 ---- */
-function hit(val, ans){ val=(val||'').replace(/\s/g,''); return ans.some(a=>a && val.includes(a.replace(/\s/g,''))); }
-function checkStep(){
-  const st=steps(); const n=st[S.step]; const fb=$('#fb'); if(!fb) return toast('讀完素材就按「下一步」');
-  const lv=L.levels[n]; const type = lv.type || ({4:'sort',6:'parts',7:'essay',8:'transfer'}[n]) || 'fields';
-  const msg=[]; let good=0, total=0, empty=0;
-  if(type==='fields'||type==='transfer'){
-    (lv.fields||[]).forEach(f=>{ const el=$(`[data-k="${f.key}"]`); const v=S.a[f.key]||''; if(!v){empty++; el&&el.classList.add('try'); return;} if(f.ans&&f.ans.length&&!f.open&&L.mode!=='topic'){ total++; if(hit(v,f.ans)){good++; el.classList.add('good');} else { el.classList.add('try'); msg.push(`「${f.label}」再想想：${(f.hint||'回去看看素材').replace(/[。？?！!]$/,'')}${/[？?]$/.test(f.hint||'')?'？':'。'}`); } } else el&&el.classList.add('good'); });
-    if(lv.sentence!==false){ const s=S.a['s'+n]||''; const el=$(`[data-k="s${n}"]`);
-      if(!s) { empty++; el&&el.classList.add('try'); }
-      else { const keys=(lv.frame||'').match(/\{(\w+)\}/g)||[]; const miss=keys.map(k=>k.slice(1,-1)).filter(k=>S.a[k] && !s.includes(S.a[k])).map(k=>FIELDS[k].label.replace(/[（(].*$/,'')); if(miss.length){ el.classList.add('try'); msg.push(`句子裡還沒用到：${miss.join('、')}。`);} else el.classList.add('good'); if(!/[。！？!?]$/.test(s.trim())) msg.push('句子最後記得加上標點符號（。！？）。'); }
-    }
-  } else if(type==='sort'){
-    const ev=lv.events; if(on('cards')){ const ord=S.order[n]||[]; ev.forEach((e,i)=>{ total++; const sl=$(`[data-slot="${i}"]`); if(!ord[i]) {empty++; return;} if(ord[i]===e){good++; sl.classList.add('good');} else sl.classList.add('bad'); }); if(good<total && !empty) msg.push('有些順序再想想：先發生什麼事，後來呢？'); }
-    const s=S.a['s'+n]||''; if(!s) empty++; else { const cj=(lv.connectors||[]).filter(c=>s.includes(c)); if(cj.length<2) msg.push('試著用兩個以上的連接詞，例如「首先、接著、最後」。'); }
-  } else if(type==='parts'){
-    (lv.parts||[]).forEach(p=>{ const v=S.a[p.key]||''; const el=$(`[data-k="${p.key}"]`); if(!v){empty++; el.classList.add('try');} else el.classList.add('good'); });
-  } else if(type==='essay'){
-    const s=(S.a['s'+n]||'').replace(/\s/g,''); if(!s) empty++; else { const w=String(lv.words||'').match(/\d+/); if(w && s.length < +w[0]) msg.push(`目前 ${s.length} 字，目標約 ${lv.words} 字，可以再加一點心情或想法。`); if(!/[，。]/.test(s)) msg.push('記得加上標點符號。'); msg.push('用下面的四個檢核項目，自己檢查一次。'); }
-  }
-  let cls='good', text;
-  if(empty) { cls='try'; text = `還有 ${empty} 個地方還沒寫，${on('speak')?'也可以按 🎤 用說的，':''}慢慢來。`; }
-  else if(msg.length) { cls='try'; text = '寫得很認真！'+msg.join(''); }
-  else text = '太棒了！這一層完成了，可以按「下一步」。';
-  if(!empty && !msg.filter(m=>!m.startsWith('用下面')).length) S.done[n]=true;
-  fb.className='fb show '+cls; fb.textContent=text; save(); speak(text);
-}
-
-/* ---- 報讀（優先用曉臻 HsiaoChen，語速 0.9） ---- */
-const synth = window.speechSynthesis; let voice=null;
-function pickVoice(){ if(!synth) return; const vs=synth.getVoices(); const want=(()=>{try{return localStorage.getItem(KEY+'voice')}catch(e){return null}})();
-  voice = vs.find(v=>v.name===want) || vs.find(v=>/HsiaoChen|曉臻/i.test(v.name)) || vs.find(v=>/zh[-_]TW/i.test(v.lang)) || vs.find(v=>/^zh/i.test(v.lang)) || null; }
-if(synth){ pickVoice(); synth.onvoiceschanged=pickVoice; }
-function clean(t){ return String(t).replace(/[✏️🧩🗣️🔊🎤📖⬇➜→✔☰]/g,'').replace(/＿+/g,'空格').replace(/\s+/g,' ').trim(); }
-function speak(t, el){ if(!synth||!t) return; synth.cancel(); const u=new SpeechSynthesisUtterance(clean(t)); if(voice){u.voice=voice;u.lang=voice.lang;} else u.lang='zh-TW'; u.rate=+(localStorage.getItem(KEY+'rate')||0.9); if(el){ el.classList.add('speak'); u.onend=u.onerror=()=>el.classList.remove('speak'); } synth.speak(u); }
-function sayEl(root){ const items=$$('[data-read]',root); if(!synth||!items.length) return; synth.cancel(); items.forEach(el=>{ const u=new SpeechSynthesisUtterance(clean(el.innerText)); if(voice){u.voice=voice;u.lang=voice.lang;} else u.lang='zh-TW'; u.rate=+(localStorage.getItem(KEY+'rate')||0.9); u.onstart=()=>el.classList.add('speak'); u.onend=u.onerror=()=>el.classList.remove('speak'); synth.speak(u); }); }
-function readStep(){ const c=$('.wrap .card'); if(c) sayEl(c); }
-function stopTTS(){ if(synth) synth.cancel(); }
-
-/* ---- 先說再寫：語音輸入（Chrome／Edge 支援） ---- */
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec=null;
-function listen(b){
-  if(!SR) return toast('這個瀏覽器不能語音輸入，請老師幫忙寫下來');
-  if(rec){ rec.stop(); return; }
-  const el=$(`[data-k="${b.dataset.mic}"]`); rec=new SR(); rec.lang='zh-TW'; rec.interimResults=false;
-  b.classList.add('on'); toast('請說話……說完再按一次 🎤');
-  rec.onresult=e=>{ const t=[...e.results].map(r=>r[0].transcript).join(''); insertAt(el,t); };
-  rec.onend=()=>{ b.classList.remove('on'); rec=null; };
-  rec.onerror=()=>{ toast('沒有聽清楚，再試一次'); };
-  rec.start();
-}
-
-/* ---- 更多選單 ---- */
-function menuHTML(){
-  const cur = S.sup||supList(V());
-  return `<div class="menu" id="menu" onclick="if(event.target===this)menu(false)"><div class="pan">
-  <button class="big" style="float:right" onclick="menu(false)">✕</button><h2 style="margin:4px 0 0">更多</h2>
-  <h3>學習支持（提示量）</h3><div class="seg">${['多','中','少'].map(p=>`<button class="${JSON.stringify(PRESET[p])===JSON.stringify(cur)?'on':''}" onclick="setPreset('${p}')">提示${p}</button>`).join('')}</div>
-  ${Object.entries(SUPS).map(([k,t])=>`<label class="sw"><input type="checkbox" ${cur.includes(k)?'checked':''} onchange="togSup('${k}',this.checked)"> ${t}</label>`).join('')}
-  <button class="mb" onclick="resetSup()">↺ 回到這個版本的預設</button>
-  ${versions.length>1?`<h3>切換版本</h3>${versions.map((v,i)=>`<button class="mb" onclick="pickV(${i});menu(false)">${i===S.v?'● ':''}${esc(v.name)}</button>`).join('')}`:''}
-  <h3>報讀</h3><label class="sw">語速 <select onchange="try{localStorage.setItem(KEY+'rate',this.value)}catch(e){}"><option value="0.7">慢</option><option value="0.9" selected>中</option><option value="1.1">快</option></select></label>
-  <label class="sw">語音 <select id="vsel" onchange="try{localStorage.setItem(KEY+'voice',this.value)}catch(e){};pickVoice();speak('你好，我是報讀小幫手。')"></select></label>
-  <h3>其他</h3>
-  <h3>字型</h3><div class="seg">${[['iansui','芫荽'],['kai','標楷'],['bpmf','芫荽注音']].map(([k,t])=>`<button class="${curFont()===k?'on':''}" onclick="setFont('${k}');renderWeb();menu(true)">${t}</button>`).join('')}</div>
-  <button class="mb" onclick="showRec()">📋 作答紀錄</button>
-  <button class="mb" onclick="toggleFS()">⛶ 全螢幕</button>
-  <button class="mb" onclick="if(confirm('要清除這台電腦上的全部作答嗎？')){Object.assign(S,blank());save();menu(false);renderWeb();}">🗑 清除作答</button>
-  </div></div>`;
-}
-function menu(o){ $('#menu').classList.toggle('show',o); if(o&&synth){ const s=$('#vsel'); const vs=synth.getVoices().filter(v=>/^zh/i.test(v.lang)); s.innerHTML=vs.map(v=>`<option ${voice&&v.name===voice.name?'selected':''}>${esc(v.name)}</option>`).join('')||'<option>（系統預設中文）</option>'; } }
-function setPreset(p){ S.sup=PRESET[p].slice(); save(); renderWeb(); menu(true); }
-function togSup(k,o){ const c=(S.sup||supList(V())).slice(); S.sup = o ? [...new Set([...c,k])] : c.filter(x=>x!==k); save(); renderWeb(); menu(true); }
-function resetSup(){ S.sup=null; save(); renderWeb(); menu(true); }
-function toggleFS(){ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); }
-
-/* ---- 作答紀錄 ---- */
-function buildRec(){
-  const v=V(); const cur=S.sup||supList(v); const name=($('#recName')||{}).value||'';
-  let t = `六何法分層寫作｜${L.title}\n版本：${v.name}　姓名：${name}　日期：${new Date().toLocaleDateString('zh-TW')}\n使用的學習支持：${cur.map(s=>SUPS[s]).join('、')||'無'}\n`;
-  lvls(v).forEach(n=>{ const lv=L.levels[n]; const type=lv.type||({4:'sort',6:'parts',7:'essay',8:'transfer'}[n])||'fields';
-    t += `\n【${n} ${LV[n].name}】${S.done[n]?'✔ 完成':'未完成'}\n`;
-    (lv.fields||[]).forEach(f=>{ if(S.a[f.key]) t+=`${f.label}：${S.a[f.key]}\n`; });
-    if(type==='sort' && S.order[n]) t += `事件順序：${S.order[n].map(x=>x||'＿').join(' → ')}\n`;
-    (lv.parts||[]).forEach(p=>{ if(S.a[p.key]) t+=`${p.label}：${S.a[p.key]}\n`; });
-    if(S.a['s'+n]) t += `${type==='essay'?'作文':'句子'}：${S.a['s'+n]}\n`;
-    const ck=(lv.checks||CHECK4.map(x=>x[0])).map((x,i)=>S.a['ck'+n+'_'+i]?x:null).filter(Boolean); if(ck.length) t+=`自我檢核：${ck.join('、')}\n`;
-  });
-  const done=lvls(v).filter(n=>S.done[n]).length;
-  t += `\n完成 ${done}／${lvls(v).length} 層。`;
-  const next = lvls(v).find(n=>!S.done[n]);
-  t += next ? `建議下一步：繼續第 ${next} 層「${LV[next].name}」。` : (cur.length>2?'建議下一步：全部完成，下次可以減少提示量（例如改成「提示少」）。':'建議下一步：全部完成，可以挑戰更高的層次或新的題目。');
-  $('#recText').textContent=t; return t;
-}
-function showRec(){ menu(false); buildRec(); $('#rec').classList.add('show'); }
-function copyRec(){ const t=buildRec(); (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('已複製'),()=>{ const r=document.createRange(); r.selectNode($('#recText')); getSelection().removeAllRanges(); getSelection().addRange(r); document.execCommand('copy'); toast('已複製'); }); }
-function printRec(){ const w=window.open(''); w.document.write(`<pre style="font-family:${getComputedStyle(document.body).fontFamily};white-space:pre-wrap;font-size:14pt">${esc(buildRec())}</pre>`); w.document.close(); w.print(); }
-
-/* ---- 字型：芫荽（預設）／標楷（教育部標準楷書優先）／芫荽注音 ---- */
-function curFont(){ return document.body.classList.contains('kai')?'kai':document.body.classList.contains('bpmf')?'bpmf':'iansui'; }
-function setFont(k){
-  document.body.classList.remove('kai','bpmf'); if(k!=='iansui') document.body.classList.add(k);
-  if(k==='bpmf' && !document.getElementById('bpmfFont')){ const l=document.createElement('link'); l.id='bpmfFont'; l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?family=Bpmf+Iansui&display=swap'; document.head.appendChild(l); }
-  try{ if(MODE==='web') localStorage.setItem(KEY+'font',k); }catch(e){}
-}
-/* ---- 啟動 ---- */
-(()=>{ let f=L.font||'iansui'; try{ if(MODE==='web') f=localStorage.getItem(KEY+'font')||f; }catch(e){} setFont(f); })();
-try{ const f=localStorage.getItem(KEY+'fs'); if(f) document.documentElement.style.setProperty('--fs',f); }catch(e){}
-if(MODE==='sheet') renderSheet(false); else if(MODE==='teacher') renderSheet(true); else renderWeb();
-<\/script>
-</body>
-</html>
-</script>
-<script id="ex" type="application/json">{"title": "小安學騎腳踏車", "mode": "text", "grade": "國小三到四年級（可依學生能力調整）", "material": {"name": "〈小安學騎腳踏車〉（自編示範文）", "text": ["星期日下午，小安和爸爸到河濱公園學騎腳踏車。小安的哥哥早就會騎了，他騎著車在旁邊繞來繞去。", "小安一坐上車，車子就歪向一邊，「砰」的一聲摔倒了。他試了好幾次，膝蓋都磨紅了。哥哥在旁邊笑了一聲，小安以為哥哥在笑他，氣得把腳踏車推倒，大聲說：「我不要騎了！」", "哥哥走過來說：「我剛剛是想到自己以前也摔了好多次，才笑出來的。」爸爸也說：「眼睛看前面，腳用力踩，車子就會站穩。」小安想了想，決定再試一次。", "這一次，爸爸在後面扶著，小安眼睛看著前方，雙腳用力踩。爸爸悄悄放開手，小安竟然自己騎了好長一段路！他開心的大喊：「我會騎了！」心裡覺得好驕傲。"]}, "core": "小安學騎腳踏車一直摔倒，又誤會哥哥笑他而生氣放棄；聽了哥哥和爸爸的話後再試一次，終於學會，心裡很驕傲。", "goals": ["找出六何，寫出完整的句子", "說出人物生氣和改變的原因", "依順序重述故事，連結自己的經驗"], "levels": {"1": {"guide": "讀一讀素材，找出故事裡的「何人、何地、何事」，再組成一句基本句。", "fields": [{"key": "who", "label": "何人", "hint": "故事的主角是誰？", "ans": ["小安"], "choices": ["小安", "老師", "阿姨"]}, {"key": "where", "label": "何地", "hint": "看第 1 段，在哪裡？", "ans": ["河濱公園", "公園"], "choices": ["河濱公園", "學校操場", "家裡"]}, {"key": "what", "label": "何事", "hint": "他在做什麼事？", "ans": ["學騎腳踏車", "騎腳踏車"], "choices": ["學騎腳踏車", "放風箏", "踢足球"]}], "frame": "{who}在{where}{what}。", "model": "小安在河濱公園學騎腳踏車。", "lines": 1}, "2": {"guide": "加上「何時」和「如何」，讓句子更完整。", "fields": [{"key": "when", "label": "何時", "hint": "看第 1 段，什麼時候？", "ans": ["星期日下午", "星期日"], "choices": ["星期日下午", "星期一早上", "晚上"]}, {"key": "how", "label": "如何", "hint": "看第 4 段，他怎麼騎的？", "ans": ["眼睛看著前方，雙腳用力踩", "看前", "用力踩"], "choices": ["眼睛看著前方，雙腳用力踩", "閉上眼睛慢慢騎", "請哥哥幫他騎"]}], "frame": "{when}，{who}在{where}{what}，他{how}，終於學會了。", "model": "星期日下午，小安在河濱公園學騎腳踏車，他眼睛看著前方，雙腳用力踩，終於學會了。", "lines": 2}, "3": {"guide": "加入兩層「為何」：小安為什麼生氣？後來為什麼願意再試？", "fields": [{"key": "why1", "label": "為何①（生氣的原因）", "hint": "看第 2 段", "ans": ["摔倒", "笑他"], "choices": ["一直摔倒，又以為哥哥在笑他", "腳踏車壞掉了", "爸爸罵他"]}, {"key": "why2", "label": "為何②（改變的原因）", "hint": "看第 3 段", "ans": ["也摔", "看前面", "方法"], "choices": ["哥哥說自己也摔過，爸爸教他方法", "爸爸買了新車給他", "下雨了不能騎"]}], "frame": "{who}一開始很生氣，因為{why1}；後來他願意再試一次，因為{why2}。", "model": "小安一開始很生氣，因為他一直摔倒，又以為哥哥在笑他；後來他願意再試一次，因為哥哥說自己也摔過，爸爸也教他方法。", "lines": 3}, "4": {"guide": "把事件依照發生的先後排好，再用連接詞串成一段話。", "events": ["小安一直摔倒", "誤會哥哥笑他，生氣不騎", "哥哥說出原因，爸爸教方法", "小安決定再試一次", "小安自己騎了好長一段路"], "connectors": ["首先", "接著", "然後", "後來", "最後"], "frame": "首先……，接著……，然後……，後來……，最後……。", "model": "首先，小安一直摔倒；接著，他誤會哥哥笑他，生氣不騎了；然後，哥哥說出原因，爸爸也教他方法；後來，小安決定再試一次；最後，他自己騎了好長一段路。", "lines": 4}, "5": {"guide": "選一個重要的事件，寫出小安當時的動作、想法和感受。", "fields": [{"key": "event", "label": "選一個事件", "hint": "可以選生氣或成功的時候", "open": true, "ans": ["小安自己騎了好長一段路"], "choices": ["小安一直摔倒", "誤會哥哥笑他", "小安自己騎了好長一段路"]}, {"key": "act", "label": "動作", "hint": "他做了什麼？", "open": true, "ans": ["開心的大喊"], "bank": ["把腳踏車推倒", "大聲說", "嘟著嘴", "開心的大喊", "張開雙手"], "bankName": "動作提示詞"}, {"key": "think", "label": "想法", "hint": "他心裡在想什麼？", "open": true, "ans": ["原來我也做得到"], "bank": ["我不要騎了", "大家都在笑我", "原來我也做得到", "再試一次吧"], "bankName": "想法提示詞"}, {"key": "feel", "label": "感受", "hint": "他覺得怎麼樣？", "open": true, "ans": ["驕傲"], "bank": ["生氣", "難過", "丟臉", "害怕", "緊張", "開心", "驕傲", "興奮"], "bankName": "情緒詞庫"}], "frame": "當{event}的時候，{who}{act}，心裡想：「{think}」，覺得很{feel}。", "model": "當小安自己騎了好長一段路的時候，小安開心的大喊，心裡想：「原來我也做得到！」，覺得很驕傲。", "lines": 3}, "6": {"guide": "把故事整理成「開始、經過、結果」三段，每段寫一到兩句。", "parts": [{"key": "p_begin", "label": "開始", "hint": "背景與起因（何時、何地、何人、何事）", "starter": "星期日下午，", "model": "星期日下午，小安和爸爸到河濱公園學騎腳踏車。"}, {"key": "p_mid", "label": "經過", "hint": "經歷與轉折（為何生氣、為何改變）", "starter": "小安一直摔倒，", "model": "小安一直摔倒，又以為哥哥在笑他，氣得不想騎了。哥哥說自己也摔過，爸爸也教他方法。"}, {"key": "p_end", "label": "結果", "hint": "改變與收穫（如何成功、心情）", "starter": "最後，", "model": "最後，小安看著前方用力踩，自己騎了好長一段路，心裡覺得好驕傲。"}], "bank": ["一開始", "可是", "於是", "後來", "終於", "原來"], "bankName": "轉折詞"}, "7": {"guide": "用前面寫好的材料，寫成一篇完整的文章。", "prompt": "用小安的角度（用「我」來寫）重述這個故事", "words": "150～200", "starter": "星期日下午，爸爸帶我到河濱公園學騎腳踏車。", "bank": ["砰的一聲", "膝蓋磨紅了", "氣呼呼的", "想了想", "悄悄放開手", "好驕傲"], "model": "星期日下午，爸爸帶我到河濱公園學騎腳踏車。哥哥早就會騎了，在旁邊繞來繞去。\n我一坐上車，車子就歪向一邊，「砰」的一聲摔倒了。試了好幾次，膝蓋都磨紅了。這時哥哥笑了一聲，我以為他在笑我，氣得把車推倒，大聲說：「我不要騎了！」\n後來哥哥說，他是想到自己以前也摔了好多次才笑的；爸爸也教我：「眼睛看前面，腳用力踩。」我想了想，決定再試一次。\n這一次，我看著前方用力踩，爸爸悄悄放開手，我竟然自己騎了好長一段路！我開心的大喊：「我會騎了！」心裡覺得好驕傲。", "lines": 10}, "8": {"guide": "想一想自己的生活，用六何法寫一段自己的經驗，寫完再檢查。", "prompt": "你有沒有「一開始做不好，後來學會」的經驗？", "fields": [{"key": "my_what", "label": "我學會的事", "hint": "例如：游泳、跳繩、綁鞋帶", "open": true, "ans": ["跳繩"], "bank": ["游泳", "跳繩", "綁鞋帶", "溜直排輪", "煎蛋"]}, {"key": "my_why", "label": "為何一開始很難", "hint": "遇到什麼困難？", "open": true, "ans": ["一直被繩子絆到"]}, {"key": "my_how", "label": "後來我如何做到", "hint": "誰幫你？你用了什麼方法？", "open": true, "ans": ["每天下課跟同學一起練習"]}], "frame": "我曾經學{my_what}，一開始{my_why}，後來我{my_how}，終於學會了。", "model": "我曾經學跳繩，一開始一直被繩子絆到，後來我每天下課跟同學一起練習，終於學會了。", "lines": 3}}, "versions": [{"name": "通用版", "levels": [1, 2, 3, 4, 5, 6, 7, 8], "support": "中", "for": "全班"}, {"name": "提示多版", "levels": [1, 2, 3], "support": "多", "for": "基本句與原因表達：需要圈選、句型與口說支持的學生"}, {"name": "挑戰版", "levels": [5, 6, 7, 8], "support": "少", "for": "敘事組織與描寫：已能寫完整句子的學生"}], "teacher": {"tips": ["像堆積木一樣：先完成基本句，再加入時間、方法、原因與感受，每一層的句子都會帶到下一層。", "可跨層搭配，不必每次完成全部頁面；依學生當次表現調整提示量。", "先說再寫：口語能力較好但書寫困難的學生，可先說給老師聽或用 🎤 語音輸入，再抄寫或修改。", "第 3 層的兩層「為何」是理解人物轉變的關鍵：先問「為什麼不高興」，再問「為什麼改變」。", "第 7 層完成後，用四個檢核重點和學生一起回顧：內容完整、組織清楚、描寫具體、自主修訂。"], "adjust": {"學習內容": "依學生能力選層（第 1–3、4–6、7–8 層），可跨層搭配；全班目標相同，逐步減少提示量。", "學習歷程": "三何起步 → 五何擴寫 → 六何完整 → 事件排序 → 情緒加料 → 三段成文 → 完整寫作 → 遷移寫作，逐層堆疊；提供圈選、提示詞、句型、情緒詞庫、事件卡與範例。", "學習環境": "可用平板或電腦開啟互動網頁（報讀、點選、語音輸入）；座位靠近老師便於口說作答；可安排同儕夥伴。", "學習評量": "允許書寫、圈選、選詞或口說（老師代寫、語音輸入）任一方式作答；以四個檢核重點與作答紀錄追蹤進步。"}}, "source": "依據：閱讀理解策略應用與實作社群「閱讀延伸寫作策略：六何法分層寫作教材」七層次架構。改編自：https://courses.dale.nthu.edu.tw/repo/14342"}</script>
-<script>
-const TPL = document.getElementById('tpl').textContent.replace(/<\\\/script>/g,'</'+'script>');
-const NAMES={web:'互動網頁',sheet:'學習單',teacher:'教師版'};
-let cur={mode:'web',html:'',L:null};
-const src=document.getElementById('src'), msg=document.getElementById('msg');
-src.value = JSON.stringify(JSON.parse(document.getElementById('ex').textContent), null, 2);
-src.addEventListener('input',()=>{ clearTimeout(src.t); src.t=setTimeout(()=>parse(true),400); });
-function parse(quiet){
-  let L; let t=src.value.trim().replace(/^```(json)?/,'').replace(/```$/,'');
-  try{ L=JSON.parse(t); }catch(e){ msg.className='err'; msg.textContent='JSON 格式有錯：'+e.message+'（請確認整段都有複製到）'; return null; }
-  const errs=[]; const lv=L.levels||{};
-  if(!L.title) errs.push('缺少 title');
-  if(!Object.keys(lv).length) errs.push('levels 是空的');
-  const keys=new Set(); Object.values(lv).forEach(x=>(x.fields||[]).forEach(f=>keys.add(f.key)));
-  Object.entries(lv).forEach(([n,x])=>((x.frame||'').match(/\{(\w+)\}/g)||[]).forEach(k=>{ if(!keys.has(k.slice(1,-1))) errs.push(`第 ${n} 層句型用到 ${k}，但沒有這個欄位`); }));
-  if(!L.versions||!L.versions.length) L.versions=[{name:'通用版',levels:Object.keys(lv).map(Number),support:'中'}];
-  L.versions.forEach(v=>(v.levels||[]).forEach(n=>{ if(!lv[n]) errs.push(`版本「${v.name}」用到第 ${n} 層，但 levels 沒有`); }));
-  if(errs.length){ msg.className='err'; msg.textContent=errs.join('；'); return null; }
-  const sel=document.getElementById('ver'); const old=sel.value;
-  sel.innerHTML=L.versions.map((v,i)=>`<option value="${i}">${v.name}</option>`).join(''); if(old && L.versions[old]) sel.value=old;
-  msg.className='ok'; msg.textContent=`讀取成功：${L.title}，${Object.keys(lv).length} 層，${L.versions.length} 個版本。`;
-  return L;
-}
-function build(L, mode, ver){
-  const js = JSON.stringify(Object.assign({}, L, {__mode:mode, __version:ver||0})).replace(/<\//g,'<\\/');
-  return TPL.replace('/*__LESSON__*/', ()=>js);
-}
-function show(mode){
-  const L=parse(); if(!L) return;
-  const ver=+document.getElementById('ver').value||0;
-  cur={mode, ver, L, html:build(L,mode,ver)};
-  document.getElementById('pv').srcdoc=cur.html;
-}
-function fname(){ const v=cur.L.versions[cur.ver]; return `${cur.L.title}_${NAMES[cur.mode]}${cur.mode==='sheet'?'_'+v.name:''}.html`.replace(/[\\/:*?"<>|\s]+/g,'_'); }
-function dl(){ if(!cur.html) show(cur.mode); if(!cur.html) return; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([cur.html],{type:'text/html'})); a.download=fname(); a.click(); }
-function printIt(){ if(!cur.html) show('sheet'); const f=document.getElementById('pv'); setTimeout(()=>f.contentWindow.print(),300); }
-show('web');
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+b.dataset.t));
+});
+document.querySelectorAll('.copy').forEach(b=>b.onclick=()=>{
+  const t=document.getElementById(b.dataset.c).textContent;
+  const done=()=>{b.textContent='已複製';setTimeout(()=>b.textContent='複製',1500);};
+  if(navigator.clipboard) navigator.clipboard.writeText(t).then(done,()=>{});
+});
 </script>
 </body>
 </html>

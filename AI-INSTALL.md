@@ -22,7 +22,7 @@
 | 平台 | 輸出 |
 |---|---|
 | Claude Code、能執行程式的環境 | 下載 skill 資料夾，執行 `python six-w-writing/scripts/build.py lesson.json`，產出互動網頁、學習單 PDF、教師版、Word |
-| Claude 網頁版、ChatGPT、Gemini | 輸出完整 lesson.json 程式碼區塊，請老師貼到製作頁 https://sesns365.github.io/six-w-writing/ 預覽與下載 |
+| Claude 網頁版、ChatGPT、Gemini | 輸出完整 lesson.json 程式碼區塊，請老師貼到製作頁 https://sesns365.github.io/six-w-writing/maker.html 預覽與下載 |
 
 ## 注意
 
