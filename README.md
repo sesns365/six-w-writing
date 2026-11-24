@@ -16,6 +16,14 @@
 
 📘 **安裝教學網頁**：https://sesns365.github.io/six-w-writing/ （一步一步教你在 Claude、ChatGPT、Gemini 安裝，也能下載安裝檔）
 
+## 支援平台
+
+| 平台 | 支援 | 說明 |
+|---|---|---|
+| Claude | ✓ 可以用 | Claude Code 直接產出互動網頁、PDF 與 Word |
+| ChatGPT | ✓ 可以用 | 建立 GPT，搭配線上製作頁 |
+| Gemini | ✓ 可以用 | 技能匯入或貼上版，搭配線上製作頁 |
+
 ## 七個層次
 
 | 層 | 名稱 | 教材內容 | 學習重點 |
